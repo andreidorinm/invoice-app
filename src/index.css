@@ -1,0 +1,132 @@
+body, html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f0f4f8;
+  height: 100%;
+}
+
+main {
+  flex: 1;
+  overflow: auto; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;
+  padding: 1rem;
+  min-height: 0;
+}
+
+header {
+  text-align: center;
+  padding: 1rem 0;
+  background-color: #007bff;
+  color: #ffffff;
+}
+
+.instruction-section {
+  display: flex; /* Enables flexbox for this container */
+  flex-direction: column; /* Stacks children vertically */
+  align-items: center; /* Centers content horizontally */
+  padding: 20px;
+  margin: 20px 0;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: auto; /* Allows the container to grow with the content */
+  max-width: 80%; /* Limits how much the container can grow */
+  text-align: center;
+}
+
+.instruction-section h2 {
+  color: #007bff; /* Matching the button color for consistency */
+}
+
+.instruction-section ol {
+  padding-left: 20px; /* Proper indentation for readability */
+}
+
+.instruction-section li {
+  margin-bottom: 10px; /* Spacing for clarity */
+}
+
+
+.instructions-list {
+  list-style-type: disc; /* Enables bullet points */
+  padding-left: 20px; /* Ensures alignment and readability */
+  text-align: left; /* Aligns text to the left for consistency */
+  max-width: 100%; /* Ensures the list doesn't overflow its container */
+}
+
+.instructions-list li {
+  text-align: left; /* Ensures text within list items is left-aligned */
+  margin-bottom: 10px; /* Adds space between list items for readability */
+}
+
+.welcome-section, .action-section {
+  margin: 0.5rem 0;
+  padding: 15px;
+  text-align: center;
+}
+
+button {
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 0.3rem;
+  transition: background-color 0.3s ease;
+  margin-top: 1rem; /* Adjusted spacing */
+  padding: 0.5rem 1rem; /* Smaller button for compact layout */
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  background-color: #343a40;
+  color: #ffffff;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-height: 800px) {
+  header, footer {
+    padding: 0.5rem 0; /* Even smaller padding */
+  }
+
+  .welcome-section, .instruction-section, .action-section {
+    padding: 10px;
+    margin: 0.25rem 0;
+  }
+}
+
+/* Additional media query for very small devices */
+@media (max-height: 600px) {
+  body, html {
+    font-size: 14px; /* Smaller base font size */
+  }
+
+  main {
+    padding: 0.5rem;
+  }
+}
+
+/* Responsive adjustments might be necessary depending on your layout */
+@media (max-width: 768px) {
+  .instruction-section {
+    max-width: 90%; /* Allows more width on smaller screens */
+    padding: 15px; /* Adjusts padding to save space */
+  }
+
+  .instructions-list {
+    padding-left: 15px; /* Adjusts to smaller screen sizes */
+  }
+}
+
