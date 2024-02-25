@@ -1,2 +1,0 @@
-# invoice-app
-Invoice App
