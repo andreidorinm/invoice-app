@@ -78,7 +78,7 @@ const FileProcessor = () => {
 
       <div className="flex items-center mb-5">
         <label htmlFor="vatPayer" className="inline-flex items-center cursor-pointer">
-        <span className="ml-2 text-gray-700">Platitor de TVA</span>
+          <span className="ml-2 text-gray-700">Platitor de TVA</span>
           <input
             id="vatPayer"
             type="checkbox"
@@ -122,15 +122,6 @@ const FileProcessor = () => {
         <div id="json-display" className="mt-4 p-4 bg-gray-100 rounded-md">
           <pre className="text-sm">{jsonDataDisplay}</pre>
         </div>
-
-        <div className="flex flex-col mb-5">
-      <button
-        onClick={selectSavePath}
-        className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
-      >
-        Choose Save Location
-      </button>
-    </div>
       </div>
     </div>
   );
