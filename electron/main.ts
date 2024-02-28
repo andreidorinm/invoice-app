@@ -1,8 +1,9 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, Menu } from 'electron'
 import path from 'node:path'
 import electronStore from 'electron-store';
 import { registerIPCHandlers } from './IPC/IPCHandlers';
 
+Menu.setApplicationMenu(null)
 electronStore.initRenderer();
 
 // The built directory structure
