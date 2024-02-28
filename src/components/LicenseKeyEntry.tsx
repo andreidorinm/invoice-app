@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import '../App.css'
 import { useNavigate } from 'react-router-dom';
-import { useLicenseKey } from './LicenseKeyProvider';
+import { useLicenseKey } from '../providers/LicenseKeyProvider';
+import { useLoading } from '../context/LoadingContext';
 
 function LicenseKeyEntry() {
   const [errorMessage, setErrorMessage] = useState('');
@@ -10,9 +11,12 @@ function LicenseKeyEntry() {
 
   const licenseKey = useLicenseKey();
   const navigate = useNavigate();
+  const { isLoading, setLoading } = useLoading();
+
 
   const handleActivateLicenseKey = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault();
+    setLoading(true);
 
     if (licenseKeyRef.current) {
       let licenseKeyValue = licenseKeyRef.current.value;
@@ -21,6 +25,7 @@ function LicenseKeyEntry() {
 
       if (licenseKeyValue === '') {
         setErrorMessage('License key cannot be empty.');
+        setLoading(false);
         return;
       }
 
@@ -35,12 +40,15 @@ function LicenseKeyEntry() {
         }
       } catch (error: any) {
         setErrorMessage(error.message);
+      } finally {
+        setLoading(false);
       }
     }
   }
 
-
-  return (
+  return isLoading ? (
+    <div>Loading...</div>
+  ) : (
     <div className="relative flex flex-col justify-center overflow-hidden">
       <div className="w-full p-6 m-auto bg-white rounded-md shadow-md lg:max-w-lg rounded-lg">
         <h1 className="text-3xl font-semibold text-center text-dark text-gray-600">Facturis NOMENCLATOR NIR</h1>
@@ -51,14 +59,12 @@ function LicenseKeyEntry() {
             </label>
             <input ref={licenseKeyRef} type="text" placeholder="License key" className="w-full input input-bordered input-primary" />
           </div>
-          {
-            errorMessage !== '' && (
-              <>
-                <span ref={errorMessageLabel} className="text-xs label-text text-error display-none">{errorMessage}</span>
-                <br />
-              </>
-            )
-          }
+          {errorMessage !== '' && (
+            <>
+              <span ref={errorMessageLabel} className="text-xs label-text text-error display-none">{errorMessage}</span>
+              <br />
+            </>
+          )}
           <div className="flex flex-row gap-8 justify-center">
             <div>
               <button className="btn btn-primary" onClick={handleActivateLicenseKey}>Activate license</button>
@@ -67,7 +73,8 @@ function LicenseKeyEntry() {
         </form>
       </div>
     </div>
-  )
+  );
 }
+
 
 export default LicenseKeyEntry

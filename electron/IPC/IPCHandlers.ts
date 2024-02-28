@@ -19,8 +19,6 @@ const {
 const handleSetLicenseKey = (_event: IpcMainEvent, key: string) => {
     try {
         const store = new electronStore();
-
-        console.log("Setting license key in store : " + key)
         store.set("licenseKey", key);
 
     } catch (e: any) {
@@ -31,8 +29,6 @@ const handleSetLicenseKey = (_event: IpcMainEvent, key: string) => {
 const handleGetLicenseKey = (_event: IpcMainInvokeEvent, _key: string): string | undefined => {
     try {
         const store = new electronStore();
-
-        console.log("Getting license key in store")
         return store.get('licenseKey') as string;
     } catch (e: any) {
         console.log(e.message)
@@ -108,10 +104,8 @@ const handleGetMarkupPercentage = (_event: IpcMainInvokeEvent, _markupPercentage
 }
 
 const handleSetVatPayerStatus = (_event: IpcMainEvent, isVatPayer: any) => {
-    console.log(`Received set markup percentage request: ${isVatPayer}`);
     const store = new electronStore();
     store.set("isVatPayer", isVatPayer);
-    console.log(`isVatPayer status set in store: ${store.get("isVatPayer")}`);
 };
 
 const handleGetVatPayerStatus = (_event: IpcMainInvokeEvent, _isVatPayer: any): string | unknown => {

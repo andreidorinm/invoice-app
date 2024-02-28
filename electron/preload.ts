@@ -141,7 +141,6 @@ contextBridge.exposeInMainWorld('api', {
   selectSavePath: () => ipcRenderer.invoke(SELECT_SAVE_PATH),
   processFile: (filePath: any) => ipcRenderer.send('process-file', filePath),
   openFileDialog: () => {
-    console.log('Opening file dialog...');
     ipcRenderer.send(OPEN_FILE_DIALOG);
   },
   setFacturisType: (facturisType: any) => ipcRenderer.send(SET_FACTURIS_TYPE, facturisType),

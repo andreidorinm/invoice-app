@@ -42,7 +42,6 @@ const FileProcessor = () => {
   const handleSetMarkup = async () => {
     try {
       await window.api.setMarkupPercentage(markup);
-      console.log("Markup percentage set successfully.");
     } catch (error) {
       console.error("Failed to set markup percentage:", error);
     }
