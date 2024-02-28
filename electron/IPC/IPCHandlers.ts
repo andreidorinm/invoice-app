@@ -1,8 +1,7 @@
 import { IpcMainEvent, IpcMainInvokeEvent, ipcMain, dialog } from "electron";
 import { IPC_ACTIONS } from "./IPCActions";
 import electronStore from 'electron-store';
-import path from 'path';
-import { parseAndTransform } from '../utils/fileProcessor'
+import { processForFacturisDesktop, processForFacturisOnline } from '../utils/fileProcessor'
 
 const {
     SET_LICENSE_KEY,
@@ -12,7 +11,8 @@ const {
     GET_VAT_PAYER_STATUS,
     SET_VAT_PAYER_STATUS,
     SELECT_SAVE_PATH,
-    OPEN_FILE_DIALOG
+    OPEN_FILE_DIALOG,
+    SET_FACTURIS_TYPE
 } = IPC_ACTIONS.Window;
 
 const handleSetLicenseKey = (_event: IpcMainEvent, key: string) => {
@@ -39,28 +39,50 @@ const handleGetLicenseKey = (_event: IpcMainInvokeEvent, _key: string): string |
     return ''
 }
 
+const handleSetFacturisType = (_event: IpcMainEvent, facturisType: string) => {
+    const store = new electronStore();
+    console.log(`Setting Facturis type in store: ${facturisType}`);
+    store.set("facturisType", facturisType);
+};
+
 const handleOpenFileDialog = (_event: IpcMainEvent) => {
     dialog.showOpenDialog({
         properties: ['openFile', 'multiSelections'],
         filters: [{ name: 'XML Files', extensions: ['xml'] }]
     }).then(result => {
         if (!result.canceled && result.filePaths.length > 0) {
+            const store = new electronStore();
+            const facturisType = store.get("facturisType", "desktop");
+
             result.filePaths.forEach(filePath => {
-                parseAndTransform(filePath, (err, message) => {
-                    if (err) {
-                        console.error('Error processing file:', err);
-                        _event.reply('file-processing-error', err.message);
-                        return;
-                    }
-                    console.log(message);
-                    _event.reply('csv-written', message);
-                });
+                if (facturisType === "online") {
+                    processForFacturisOnline(filePath, (err, message) => {
+                        if (err) {
+                            console.error('Error processing file:', err);
+                            _event.reply('file-processing-error', err.message);
+                            return;
+                        }
+                        console.log(message);
+                        _event.reply('csv-written', message);
+                    });
+                } else {
+                    processForFacturisDesktop(filePath, (err, message) => {
+                        if (err) {
+                            console.error('Error processing file:', err);
+                            _event.reply('file-processing-error', err.message);
+                            return;
+                        }
+                        console.log(message);
+                        _event.reply('csv-written', message);
+                    });
+                }
             });
         }
     }).catch(err => {
         console.error(err);
     });
 };
+
 
 const handleSetMarkupPercentage = (_event: IpcMainEvent, markupPercentage: any) => {
     const store = new electronStore();
@@ -71,7 +93,7 @@ const handleSetMarkupPercentage = (_event: IpcMainEvent, markupPercentage: any) 
 
 const handleGetMarkupPercentage = (_event: IpcMainInvokeEvent, _markupPercentage: any): string | unknown => {
     const store = new electronStore();
-    const markupPercentage = store.get("markupPercentage", 0); // Default to 0 or any default value
+    const markupPercentage = store.get("markupPercentage", 0);
     return markupPercentage;
 }
 
@@ -115,4 +137,6 @@ export const registerIPCHandlers = () => {
 
     ipcMain.on(OPEN_FILE_DIALOG, handleOpenFileDialog);
     ipcMain.handle(SELECT_SAVE_PATH, handleSelectSavePath);
+
+    ipcMain.on(SET_FACTURIS_TYPE, handleSetFacturisType);
 }

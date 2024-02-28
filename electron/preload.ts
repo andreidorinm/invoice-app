@@ -9,7 +9,8 @@ const {
   SET_VAT_PAYER_STATUS,
   GET_VAT_PAYER_STATUS,
   SELECT_SAVE_PATH,
-  OPEN_FILE_DIALOG
+  OPEN_FILE_DIALOG,
+  SET_FACTURIS_TYPE
 } = IPC_ACTIONS.Window;
 
 // --------- Expose some API to the Renderer process ---------
@@ -142,10 +143,10 @@ contextBridge.exposeInMainWorld('api', {
     console.log('Opening file dialog...');
     ipcRenderer.send(OPEN_FILE_DIALOG);
   },
+  setFacturisType: (facturisType: any) => ipcRenderer.send(SET_FACTURIS_TYPE, facturisType),
   receive: (channel: any, func: any) => {
-    let validChannels = ['file-processed', 'display-json', 'license-key-updated']; // Combine valid channels here, including any new ones you need
+    let validChannels = ['file-processed', 'display-json', 'license-key-updated'];
     if (validChannels.includes(channel)) {
-      // Now this setup can handle multiple channels
       ipcRenderer.on(channel, ( ...args) => func(...args));
     }
   }

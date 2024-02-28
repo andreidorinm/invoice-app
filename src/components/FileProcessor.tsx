@@ -5,6 +5,8 @@ const FileProcessor = () => {
   const [markup, setMarkup] = useState(0);
   const [isVatPayer, setIsVatPayer] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [facturisType, setFacturisType] = useState('Desktop');
+
 
   useEffect(() => {
     const initialize = async () => {
@@ -63,19 +65,37 @@ const FileProcessor = () => {
     }
   };
 
-  const selectSavePath = async () => {
+  const handleFacturisTypeChange = async (newType: 'desktop' | 'online') => {
+    setFacturisType(newType);
     try {
-      const savePath = await window.api.selectSavePath();
-      console.log("Save path selected:", savePath);
+      await window.api.setFacturisType(newType);
+      console.log(`Facturis type set to: ${newType}`);
     } catch (error) {
-      console.error("Failed to select save path:", error);
+      console.error("Failed to set Facturis type:", error);
     }
   };
+
 
   return (
     <div className="container mx-auto p-6 bg-white shadow-md">
       <h2 className="text-xl font-bold mb-4">File Processor Settings</h2>
-
+      <div className="mb-5">
+        <label className="text-gray-700">Facturis Type:</label>
+        <div className="mt-2">
+          <button
+            className={`px-4 py-2 rounded-l-md ${facturisType === 'desktop' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            onClick={() => handleFacturisTypeChange('desktop')}
+          >
+            Desktop
+          </button>
+          <button
+            className={`px-4 py-2 rounded-r-md ${facturisType === 'online' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            onClick={() => handleFacturisTypeChange('online')}
+          >
+            Online
+          </button>
+        </div>
+      </div>
       <div className="flex items-center mb-5">
         <label htmlFor="vatPayer" className="inline-flex items-center cursor-pointer">
           <span className="ml-2 text-gray-700">Platitor de TVA</span>

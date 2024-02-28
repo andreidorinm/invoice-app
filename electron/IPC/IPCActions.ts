@@ -7,7 +7,8 @@ export const IPC_ACTIONS = {
         SET_VAT_PAYER_STATUS: 'SET_VAT_PAYER_STATUS',
         GET_VAT_PAYER_STATUS: 'GET_VAT_PAYER_STATUS',
         SELECT_SAVE_PATH: 'select-save-path',
-        OPEN_FILE_DIALOG: 'open-file-dialog'
+        OPEN_FILE_DIALOG: 'open-file-dialog',
+        SET_FACTURIS_TYPE: "set-facturis-type"
     }
 };
 
