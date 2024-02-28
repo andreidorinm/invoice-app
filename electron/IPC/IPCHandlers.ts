@@ -42,15 +42,12 @@ const handleGetLicenseKey = (_event: IpcMainInvokeEvent, _key: string): string |
 
 const handleSetFacturisType = (_event: IpcMainEvent, facturisType: string) => {
     const store = new electronStore();
-    console.log(`Setting Facturis type in store: ${facturisType}`);
     store.set("facturisType", facturisType);
 };
 
-const handleGetFacturisType = (_event: IpcMainInvokeEvent, facturisType: string) => {
+const handleGetFacturisType = (_event: IpcMainInvokeEvent) => {
     try {
         const store = new electronStore();
-
-        console.log(`Setting Facturis type in store: ${facturisType}`);
         return store.get('facturisType') as string;
     } catch (e: any) {
         console.log(e.message)

@@ -82,7 +82,7 @@ const FileProcessor = () => {
     <div className="container mx-auto p-6 bg-white shadow-md">
       <h2 className="text-xl font-bold mb-4">File Processor Settings</h2>
       <div className="mb-5">
-        <label className="text-gray-700">Facturis Type:</label>
+        <label className="text-gray-700">Tipul de Facturis:</label>
         <div className="mt-2">
           <button
             className={`px-4 py-2 rounded-l-md ${facturisType === 'desktop' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}

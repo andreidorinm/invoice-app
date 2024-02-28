@@ -198,7 +198,7 @@ async function mapXmlDataToFacturisOnlineNirCsv(jsonData: JsonData, markupPercen
       'Nr. Crt.': index + 1,
       'Cod Produs': '',
       'Denumire Produs': line['cac:Item']['cbc:Name'],
-      'UM': line['cbc:InvoicedQuantity']['unitCode'],
+      'UM': 'BUC',
       'Cant.': line['cbc:InvoicedQuantity']['_'],
       'Pret fara TVA. Achizitie': priceWithoutVat.toFixed(2),
       'Pret cu TVA. Achizitie': priceWithVat.toFixed(2),
