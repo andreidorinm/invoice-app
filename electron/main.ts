@@ -3,7 +3,7 @@ import path from 'node:path'
 import electronStore from 'electron-store';
 import { registerIPCHandlers } from './IPC/IPCHandlers';
 
-// Menu.setApplicationMenu(null)
+Menu.setApplicationMenu(null)
 electronStore.initRenderer();
 
 // The built directory structure
