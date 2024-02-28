@@ -10,7 +10,8 @@ const {
   GET_VAT_PAYER_STATUS,
   SELECT_SAVE_PATH,
   OPEN_FILE_DIALOG,
-  SET_FACTURIS_TYPE
+  SET_FACTURIS_TYPE,
+  GET_FACTURIS_TYPE
 } = IPC_ACTIONS.Window;
 
 // --------- Expose some API to the Renderer process ---------
@@ -144,6 +145,8 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.send(OPEN_FILE_DIALOG);
   },
   setFacturisType: (facturisType: any) => ipcRenderer.send(SET_FACTURIS_TYPE, facturisType),
+  getFacturisType: () => ipcRenderer.invoke(GET_FACTURIS_TYPE),
+
   receive: (channel: any, func: any) => {
     let validChannels = ['file-processed', 'display-json', 'license-key-updated'];
     if (validChannels.includes(channel)) {

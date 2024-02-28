@@ -15,6 +15,7 @@ declare global {
       getVatPayerStatus: () => Promise<boolean>;
       selectSavePath: () => Promise<string>;
       setFacturisType: (type: string) => void;
+      getFacturisType: () => Promise<string>;
     };
   }
 }

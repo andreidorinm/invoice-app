@@ -12,6 +12,8 @@ const FileProcessor = () => {
     const initialize = async () => {
       const storedMarkup = await window.api.getMarkupPercentage();
       const vatPayerStatus = await window.api.getVatPayerStatus();
+      const facturisType = await window.api.getFacturisType();
+      setFacturisType(facturisType);
       setIsVatPayer(vatPayerStatus);
       setMarkup(storedMarkup);
       setLoading(false);

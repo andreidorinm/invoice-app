@@ -12,7 +12,8 @@ const {
     SET_VAT_PAYER_STATUS,
     SELECT_SAVE_PATH,
     OPEN_FILE_DIALOG,
-    SET_FACTURIS_TYPE
+    SET_FACTURIS_TYPE,
+    GET_FACTURIS_TYPE
 } = IPC_ACTIONS.Window;
 
 const handleSetLicenseKey = (_event: IpcMainEvent, key: string) => {
@@ -43,6 +44,18 @@ const handleSetFacturisType = (_event: IpcMainEvent, facturisType: string) => {
     const store = new electronStore();
     console.log(`Setting Facturis type in store: ${facturisType}`);
     store.set("facturisType", facturisType);
+};
+
+const handleGetFacturisType = (_event: IpcMainInvokeEvent, facturisType: string) => {
+    try {
+        const store = new electronStore();
+
+        console.log(`Setting Facturis type in store: ${facturisType}`);
+        return store.get('facturisType') as string;
+    } catch (e: any) {
+        console.log(e.message)
+    }
+    return ''
 };
 
 const handleOpenFileDialog = (_event: IpcMainEvent) => {
@@ -139,4 +152,5 @@ export const registerIPCHandlers = () => {
     ipcMain.handle(SELECT_SAVE_PATH, handleSelectSavePath);
 
     ipcMain.on(SET_FACTURIS_TYPE, handleSetFacturisType);
+    ipcMain.handle(GET_FACTURIS_TYPE, handleGetFacturisType);
 }

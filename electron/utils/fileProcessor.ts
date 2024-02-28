@@ -138,16 +138,9 @@ async function processForFacturisDesktop(filePath: string, callback: (err: Error
       throw new Error('No directory selected');
     }
 
-    const outputDir = filePaths[0];
-
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
+    const baseOutputDir = filePaths[0];
     const markupPercentage = store.get('markupPercentage', 0);
     const markupPercentageNumber = Number(markupPercentage);
-
-    console.log(`Markup Percentage from Store: ${markupPercentageNumber}`);
 
     fs.readFile(filePath, async (err, data) => {
       if (err) {
@@ -161,18 +154,16 @@ async function processForFacturisDesktop(filePath: string, callback: (err: Error
           return callback(err);
         }
 
-        console.log('Parsed JSON from XML:', JSON.stringify(result, null, 2));
-
         const issueDate = formatDate(result.Invoice['cbc:IssueDate']);
-        const nirCsvFileName = `NIR_${issueDate}.csv`;
-        const nirOutputPath = path.join(outputDir, nirCsvFileName);
-        const nomenclatorOutputFileName = `NOMENCLATOR_${issueDate}.csv`;
-        const nomenclatorOutputPath = path.join(outputDir, nomenclatorOutputFileName);
-
-
-        if (!fs.existsSync(outputDir)) {
-          fs.mkdirSync(outputDir, { recursive: true });
+        const invoiceDir = path.join(baseOutputDir, `Factura_${issueDate}`);
+        if (!fs.existsSync(invoiceDir)) {
+          fs.mkdirSync(invoiceDir, { recursive: true });
         }
+
+        const nirCsvFileName = `NIR_${issueDate}.csv`;
+        const nirOutputPath = path.join(invoiceDir, nirCsvFileName);
+        const nomenclatorOutputFileName = `NOMENCLATOR_${issueDate}.csv`;
+        const nomenclatorOutputPath = path.join(invoiceDir, nomenclatorOutputFileName);
 
         const nirCsvData = await mapXmlDataToFacturisDesktopNirCsv(result, markupPercentageNumber);
         await writeCsvData(nirOutputPath, nirCsvData, callback);
@@ -182,7 +173,7 @@ async function processForFacturisDesktop(filePath: string, callback: (err: Error
       });
     });
   } catch (error: any) {
-    console.error('Error in parseAndTransform:', error.message);
+    console.error('Error in processForFacturisDesktop:', error.message);
     callback(error);
   }
 }
@@ -271,25 +262,8 @@ async function mapXmlDataToFacturisOnlineNomenclatorCsv(jsonData: JsonData): Pro
 
 async function processForFacturisOnline(filePath: string, callback: (err: Error | null, message?: string) => void): Promise<void> {
   try {
-    const { filePaths } = await dialog.showOpenDialog({
-      properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
-      title: 'Select a folder to save your files',
-    });
-
-    if (!filePaths || filePaths.length === 0) {
-      throw new Error('No directory selected');
-    }
-
-    const outputDir = filePaths[0];
-
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
     const markupPercentage = store.get('markupPercentage', 0);
     const markupPercentageNumber = Number(markupPercentage);
-
-    console.log(`Markup Percentage from Store: ${markupPercentageNumber}`);
 
     fs.readFile(filePath, async (err, data) => {
       if (err) {
@@ -303,18 +277,29 @@ async function processForFacturisOnline(filePath: string, callback: (err: Error 
           return callback(err);
         }
 
-        console.log('Parsed JSON from XML:', JSON.stringify(result, null, 2));
-
         const issueDate = formatDate(result.Invoice['cbc:IssueDate']);
+        const folderName = `Factura_${issueDate}`;
+        const { filePaths } = await dialog.showOpenDialog({
+          properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+          title: 'Select a folder to save your files',
+        });
+
+        if (!filePaths || filePaths.length === 0) {
+          throw new Error('No directory selected');
+        }
+
+        const outputDir = path.join(filePaths[0], folderName);
+
+        if (!fs.existsSync(outputDir)) {
+          fs.mkdirSync(outputDir, { recursive: true });
+        }
+
         const nirCsvFileName = `NIR_${issueDate}.csv`;
         const nirOutputPath = path.join(outputDir, nirCsvFileName);
         const nomenclatorOutputFileName = `NOMENCLATOR_${issueDate}.csv`;
         const nomenclatorOutputPath = path.join(outputDir, nomenclatorOutputFileName);
 
-
-        if (!fs.existsSync(outputDir)) {
-          fs.mkdirSync(outputDir, { recursive: true });
-        }
+        console.log(`Markup Percentage from Store: ${markupPercentageNumber}`);
 
         const nirCsvData = await mapXmlDataToFacturisOnlineNirCsv(result, markupPercentageNumber);
         await writeCsvData(nirOutputPath, nirCsvData, callback);
@@ -324,9 +309,10 @@ async function processForFacturisOnline(filePath: string, callback: (err: Error 
       });
     });
   } catch (error: any) {
-    console.error('Error in parseAndTransform:', error.message);
+    console.error('Error in processForFacturisOnline:', error.message);
     callback(error);
   }
 }
+
 
 export { processForFacturisDesktop, processForFacturisOnline };
