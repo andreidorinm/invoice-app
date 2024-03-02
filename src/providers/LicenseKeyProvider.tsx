@@ -45,8 +45,8 @@ export interface LicenseKeyProviderValue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/vnd.api+json',
+                    'Content-Type': 'application/vnd.api+json'
                 },
                 body: JSON.stringify({ license_key: licenseKey })
             }
@@ -105,8 +105,8 @@ export interface LicenseKeyProviderValue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/vnd.api+json',
+                    'Content-Type': 'application/vnd.api+json'
                 },
                 body: JSON.stringify({ license_key: licenseKey, instance_name: import.meta.env.VITE_LEMON_SQUEEZY_INSTANCE_NAME })
             }
