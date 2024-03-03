@@ -11,11 +11,12 @@
   },
   "dependencies": {
     "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.8",
+    "fast-csv": "^5.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",
-    "xml2js": "^0.6.2",
-    "fast-csv": "^5.0.0"
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.21",
@@ -38,5 +39,16 @@
     "vite-plugin-electron": "^0.14.0",
     "vite-plugin-electron-renderer": "^0.14.5"
   },
-  "main": "dist-electron/main.js"
+  "main": "dist-electron/main.js",
+  "build": {
+    "appId": "ClarFactura",
+    "productName": "ClarFactura",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "andreidorinm",
+        "repo": "invoice-app"
+      }
+    ]
+  }
 }

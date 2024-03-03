@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu } from 'electron'
 import path from 'node:path'
 import electronStore from 'electron-store';
+import { autoUpdater } from 'electron-updater';
 import { registerIPCHandlers } from './IPC/IPCHandlers';
 
 Menu.setApplicationMenu(null)
@@ -65,4 +66,18 @@ app.on('activate', () => {
 app.whenReady().then(() => {
   registerIPCHandlers();
   createWindow();
+  autoUpdater.checkForUpdatesAndNotify();
+
+  autoUpdater.on('update-available', () => {
+    win?.webContents.send('update_available');
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    win?.webContents.send('update_downloaded');
+  });
+
+  autoUpdater.on('error', (err) => {
+    win?.webContents.send('update_error', err.toString());
+  });
+
 })
