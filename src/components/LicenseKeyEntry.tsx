@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import '../App.css'
 import { useNavigate } from 'react-router-dom';
 import { useLicenseKey } from '../providers/LicenseKeyProvider';
+import ExcelIcon from '../assets/excel.png'
 
 function LicenseKeyEntry() {
   const [errorMessage, setErrorMessage] = useState('');
@@ -43,6 +44,9 @@ function LicenseKeyEntry() {
   return (
     <div className="relative flex flex-col justify-center overflow-hidden">
       <div className="w-full p-6 m-auto bg-white rounded-md shadow-md lg:max-w-lg rounded-lg">
+        <div className='flex justify-center'>
+          <img src={ExcelIcon} width={45} alt="ExcelIcon" />
+        </div>
         <h1 className="text-3xl font-semibold text-center text-dark text-gray-600">ClarFactura aici vei activa licenta ta</h1>
         <form className="space-y-4">
           <div>

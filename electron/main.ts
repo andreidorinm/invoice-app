@@ -3,7 +3,7 @@ import path from 'node:path'
 import electronStore from 'electron-store';
 import { registerIPCHandlers } from './IPC/IPCHandlers';
 
-// Menu.setApplicationMenu(null)
+Menu.setApplicationMenu(null)
 electronStore.initRenderer();
 
 // The built directory structure
@@ -25,7 +25,7 @@ const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    icon: path.join(process.env.VITE_PUBLIC, 'assets', 'app-icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
