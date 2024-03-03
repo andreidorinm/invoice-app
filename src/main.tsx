@@ -23,7 +23,7 @@ if (rootElement) {
   );
 
   postMessage({ payload: 'removeLoading' }, '*');
-  console.log(import.meta.env.VITE_LEMON_SQUEEZY_ACTIVATE_URL); // This should log the URL if everything is correct
+  console.log(import.meta.env.VITE_LEMON_SQUEEZY_ACTIVATE_URL);
 } else {
   console.error("Failed to find the root element");
 }
