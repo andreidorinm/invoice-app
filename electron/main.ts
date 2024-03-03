@@ -25,7 +25,7 @@ const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'assets', 'app-icon.png'),
+    icon: path.join(process.env.VITE_PUBLIC, 'excel.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
