@@ -1,8 +1,8 @@
-import { createContext, useCallback, useContext, useEffect } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getLicenseKey, setLicenseKey } from "../data/IPCMessages";
 import { LemonAPIResponse, LemonAPIResponseValidateKey } from "../types/lemonSqueezy";
 import { useNavigate } from "react-router-dom";
-import { useLoading } from "../context/LoadingContext";
+import LoadingScreen from "../screens/LoadingScreen";
 
 const LicenseKeyContext = createContext({} as LicenseKeyProviderValue);
 
@@ -25,9 +25,9 @@ export interface LicenseKeyProviderValue {
     handleActivateLicenseKey: (licenseKey: string) => Promise<apiMessage>,
 }
 
- const LicenseKeyProvider = ({ children }: LicenseKeyProviderProps) => {
+const LicenseKeyProvider = ({ children }: LicenseKeyProviderProps) => {
     const navigate = useNavigate();
-    const { setLoading } = useLoading();
+    const [loading, setLoading] = useState(true);
 
     const checkIfLicenseKeyIsActivated = useCallback(async (): Promise<apiMessage> => {
         const licenseKey = await getLicenseKey();
@@ -53,7 +53,6 @@ export interface LicenseKeyProviderValue {
         ).then((response) => {
             return response.json();
         }).then((response: LemonAPIResponseValidateKey) => {
-            setLoading(false);
 
             if (response.error) {
                 console.log(response.error);
@@ -149,19 +148,18 @@ export interface LicenseKeyProviderValue {
     }
 
     useEffect(() => {
-        setLoading(true);
         const initializeLicenseKeyCheck = async () => {
             const response = await checkIfLicenseKeyIsActivated();
             if (response.error) {
                 navigate('/');
             } else {
-            setLoading(false);
                 navigate('/app');
             }
+            setLoading(false);
         };
 
         initializeLicenseKeyCheck();
-    }, [setLoading, checkIfLicenseKeyIsActivated, navigate]);
+    }, [checkIfLicenseKeyIsActivated, navigate]);
 
     const value = {
         checkIfLicenseKeyIsActivated,
@@ -169,11 +167,13 @@ export interface LicenseKeyProviderValue {
     }
 
     return (
-        <>
-            <LicenseKeyContext.Provider value={value}>
-                {children}
-            </LicenseKeyContext.Provider>
-        </>
+        <LicenseKeyContext.Provider value={value}>
+            {loading ? (
+                <LoadingScreen />
+            ) : (
+                children
+            )}
+        </LicenseKeyContext.Provider>
     )
 };
 

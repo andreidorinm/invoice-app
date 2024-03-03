@@ -2,7 +2,6 @@ import { useRef, useState } from 'react'
 import '../App.css'
 import { useNavigate } from 'react-router-dom';
 import { useLicenseKey } from '../providers/LicenseKeyProvider';
-import { useLoading } from '../context/LoadingContext';
 
 function LicenseKeyEntry() {
   const [errorMessage, setErrorMessage] = useState('');
@@ -11,12 +10,10 @@ function LicenseKeyEntry() {
 
   const licenseKey = useLicenseKey();
   const navigate = useNavigate();
-  const { isLoading, setLoading } = useLoading();
 
 
   const handleActivateLicenseKey = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault();
-    setLoading(true);
 
     if (licenseKeyRef.current) {
       let licenseKeyValue = licenseKeyRef.current.value;
@@ -25,7 +22,6 @@ function LicenseKeyEntry() {
 
       if (licenseKeyValue === '') {
         setErrorMessage('License key cannot be empty.');
-        setLoading(false);
         return;
       }
 
@@ -40,8 +36,6 @@ function LicenseKeyEntry() {
         }
       } catch (error: any) {
         setErrorMessage(error.message);
-      } finally {
-        setLoading(false);
       }
     }
   }
