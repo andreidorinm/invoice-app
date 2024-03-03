@@ -21,7 +21,7 @@ function LicenseKeyEntry() {
       licenseKeyValue = licenseKeyValue.replace(/\s/g, '');
 
       if (licenseKeyValue === '') {
-        setErrorMessage('License key cannot be empty.');
+        setErrorMessage('Licenta este gresita');
         return;
       }
 
@@ -43,13 +43,13 @@ function LicenseKeyEntry() {
   return (
     <div className="relative flex flex-col justify-center overflow-hidden">
       <div className="w-full p-6 m-auto bg-white rounded-md shadow-md lg:max-w-lg rounded-lg">
-        <h1 className="text-3xl font-semibold text-center text-dark text-gray-600">Facturis NOMENCLATOR NIR</h1>
+        <h1 className="text-3xl font-semibold text-center text-dark text-gray-600">ClarFactura aici vei activa licenta ta</h1>
         <form className="space-y-4">
           <div>
             <label className="label">
-              <span className="text-base label-text">Please enter your license key</span>
+              <span className="text-base label-text">Te rugam sa introduci licenta</span>
             </label>
-            <input ref={licenseKeyRef} type="text" placeholder="License key" className="w-full input input-bordered input-primary" />
+            <input ref={licenseKeyRef} type="text" placeholder="Cheia de licenta" className="w-full input input-bordered input-primary" />
           </div>
           {errorMessage !== '' && (
             <>
@@ -59,7 +59,7 @@ function LicenseKeyEntry() {
           )}
           <div className="flex flex-row gap-8 justify-center">
             <div>
-              <button className="btn btn-primary" onClick={handleActivateLicenseKey}>Activate license</button>
+              <button className="btn btn-primary" onClick={handleActivateLicenseKey}>Activeaza licenta</button>
             </div>
           </div>
         </form>

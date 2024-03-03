@@ -48,8 +48,8 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
+.button-facturis-type:hover {
+  border: 1px solid #0096FF;
 }
 button:focus,
 button:focus-visible {
@@ -66,5 +66,12 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+@media (min-width: 1400px) {
+  .container-factura {
+    height:550px;
+    width:1200px;
   }
 }

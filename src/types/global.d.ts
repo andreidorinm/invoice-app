@@ -3,6 +3,7 @@ export {};
 declare global {
   interface Window {
     api: {
+      receiveMessage(arg0: string, handleFileProcessed: (message: any) => void): unknown;
       openFileDialog: () => void;
       setLicenseKey: (key: string) => void;
       getLicenseKey: () => Promise<string>;

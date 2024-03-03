@@ -130,26 +130,32 @@ window.onmessage = ev => {
 
 setTimeout(removeLoading, 4999)
 
-contextBridge.exposeInMainWorld('api', {
-  ...withPrototype(ipcRenderer),
+const safeExposeIpcRenderer = () => ({
   setLicenseKey: (key: any) => ipcRenderer.send(SET_LICENSE_KEY, key),
   getLicenseKey: () => ipcRenderer.invoke(GET_LICENSE_KEY),
-  setMarkupPercentage: (key: any) => ipcRenderer.send(SET_MARKUP_PERCENTAGE, key),
+  setMarkupPercentage: (percentage: any) => ipcRenderer.send(SET_MARKUP_PERCENTAGE, percentage),
   getMarkupPercentage: () => ipcRenderer.invoke(GET_MARKUP_PERCENTAGE),
   setVatPayerStatus: (isVatPayer: any) => ipcRenderer.send(SET_VAT_PAYER_STATUS, isVatPayer),
   getVatPayerStatus: () => ipcRenderer.invoke(GET_VAT_PAYER_STATUS),
   selectSavePath: () => ipcRenderer.invoke(SELECT_SAVE_PATH),
-  processFile: (filePath: any) => ipcRenderer.send('process-file', filePath),
-  openFileDialog: () => {
-    ipcRenderer.send(OPEN_FILE_DIALOG);
-  },
+  openFileDialog: () => ipcRenderer.send(OPEN_FILE_DIALOG),
   setFacturisType: (facturisType: any) => ipcRenderer.send(SET_FACTURIS_TYPE, facturisType),
   getFacturisType: () => ipcRenderer.invoke(GET_FACTURIS_TYPE),
-
-  receive: (channel: any, func: any) => {
-    let validChannels = ['file-processed', 'display-json', 'license-key-updated'];
+  processFile: (filePath: any) => ipcRenderer.send('process-file', filePath),
+  receiveMessage: (channel: any, func: any) => {
+    const validChannels = ['csv-written', 'file-processing-error', 'license-key-updated'];
     if (validChannels.includes(channel)) {
-      ipcRenderer.on(channel, ( ...args) => func(...args));
+      const subscription = (_event: any, ...args: any) => func(...args);
+      ipcRenderer.on(channel, subscription);
+
+      return () => {
+        ipcRenderer.removeListener(channel, subscription);
+      };
     }
+  },
+  removeListener: (channel: string, func: (...args: any[]) => void) => {
+    ipcRenderer.removeListener(channel, func);
   }
 });
+
+contextBridge.exposeInMainWorld('api', safeExposeIpcRenderer());

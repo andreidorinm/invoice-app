@@ -113,12 +113,12 @@ async function writeCsvData(outputPath: string, csvData: CsvRow[], callback: (er
   const writableStream = fs.createWriteStream(outputPath);
 
   writableStream.on('finish', () => {
-    console.log(`CSV file has been written: ${outputPath}`);
-    callback(null, `CSV file has been written: ${outputPath}`);
+    console.log(`Fisierul Excel a fost salvat la: ${outputPath}`);
+    callback(null, `Fisierul Excel a fost salvat la: ${outputPath}`);
   });
 
   writableStream.on('error', (err) => {
-    console.error('Error writing CSV file:', err);
+    console.error('Eroare la salvarea fisierului:', err);
     callback(err);
   });
 
