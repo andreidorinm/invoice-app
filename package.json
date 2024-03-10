@@ -1,5 +1,5 @@
 {
-  "name": "electron-license-key-template",
+  "name": "clarfactura-in-nir",
   "private": true,
   "version": "0.0.0",
   "scripts": {
@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "electron-context-menu": "^3.6.1",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.1.8",
     "fast-csv": "^5.0.0",
