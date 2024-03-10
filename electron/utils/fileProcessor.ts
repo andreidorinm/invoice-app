@@ -41,7 +41,7 @@ async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonData): Pr
       'Pret 2 cu TVA': '',
       'Pret 3 fara TVA': '',
       'Pret 3 cu TVA': '',
-      'Cota TVA': (vatRate * 100).toFixed(2) + '%',
+      'Cota TVA': (vatRate * 100).toFixed(0) + '%',
       'Categorie Produse': '',
       'Accize': '',
       'Greutate': '',
@@ -66,47 +66,55 @@ async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, markupPerce
       ? parseFloat(line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']) / 100
       : 0;
 
-    if (isNaN(basePrice) || isNaN(vatRate)) {
-      console.error(`Invalid number encountered. Base Price: ${basePrice}, VAT Rate: ${vatRate}`);
-      return;
+    let priceWithoutVat = parseFloat(basePrice.toFixed(2));
+    if (line['cac:Item']['cbc:Name'].includes("GARANTIE SGR")) {
+      priceWithoutVat = 0.50;
     }
-
-    const priceWithoutVat = basePrice;
     const priceWithVat = basePrice * (1 + vatRate);
 
-    const sellingPriceWithoutVat = priceWithoutVat * (1 + markupPercentage / 100);
-    const sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
-
     const isVatPayer = store.get('isVatPayer', false);
+    const markupMultiplier = 1 + markupPercentage / 100;
+
+    let sellingPriceWithoutVat = priceWithoutVat * markupMultiplier;
+    let sellingPriceWithVat = isVatPayer ? sellingPriceWithoutVat * (1 + vatRate) : sellingPriceWithoutVat; // Keep the same value if not a VAT payer
+
+
+    const productName = line['cac:Item']['cbc:Name'];
+    let quantity = line['cbc:InvoicedQuantity']['_'];
+    const match = productName.match(/(\d+)\s*x/i);
+
+    if (match) {
+      quantity = match[1];
+    }
 
     let outputVatRate: any;
     if (isVatPayer) {
       outputVatRate = vatRate * 100;
     } else {
-      outputVatRate = 'neplatitor de tva';
+      outputVatRate = 'Neplatitor de TVA';
     }
 
     let row: CsvRow = {
       'Nr. crt.': index + 1,
-      'Nume Produs': line['cac:Item']['cbc:Name'],
+      'Nume Produs': productName,
       'UM': 'BUC',
       'Cod Produs EAN': '',
-      'Cantitate': line['cbc:InvoicedQuantity']['_'],
-      'Pret achizitie fara TVA': priceWithoutVat.toFixed(2),
-      'Pret achizitie cu TVA': priceWithVat.toFixed(2),
+      'Cantitate': quantity,
+      'Pret achizitie fara TVA': priceWithoutVat.toFixed(3),
+      'Pret achizitie cu TVA': priceWithVat.toFixed(3),
       'Pret vanzare fara TVA': sellingPriceWithoutVat.toFixed(2),
       'Pret vanzare cu TVA': sellingPriceWithVat.toFixed(2),
       'Lot': '',
       'Data expirarii (dd-mm-yyyy)': '',
-      'Cota TVA intrare': vatRate * 100 + '%',
-      'Cota TVA iesire': outputVatRate + '%',
+      'Cota TVA intrare': (vatRate * 100).toFixed(0) + '%',
+      'Cota TVA iesire': outputVatRate,
     };
     csvRows.push(row);
   });
 
-
   return csvRows;
 }
+
 
 async function writeCsvData(outputPath: string, csvData: CsvRow[], callback: (err: Error | null, message?: string) => void) {
   const csvStream = format({ headers: true });
@@ -189,19 +197,31 @@ async function mapXmlDataToFacturisOnlineNirCsv(jsonData: JsonData, markupPercen
     const vatRate = line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']
       ? parseFloat(line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']) / 100
       : 0;
-    const priceWithoutVat = basePrice;
+      
+    let priceWithoutVat = parseFloat(basePrice.toFixed(2));
+    if (line['cac:Item']['cbc:Name'].includes("GARANTIE SGR")) {
+      priceWithoutVat = 0.50;
+    }
     const priceWithVat = basePrice * (1 + vatRate);
     const sellingPriceWithoutVat = priceWithoutVat * (1 + markupPercentage / 100);
     const sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
 
+    const productName = line['cac:Item']['cbc:Name'];
+    let quantity = line['cbc:InvoicedQuantity']['_'];
+    const match = productName.match(/(\d+)\s*x/i);
+
+    if (match) {
+      quantity = match[1];
+    }
+
     let row: CsvRow = {
       'Nr. Crt.': index + 1,
       'Cod Produs': '',
-      'Denumire Produs': line['cac:Item']['cbc:Name'],
+      'Denumire Produs': productName,
       'UM': 'BUC',
-      'Cant.': line['cbc:InvoicedQuantity']['_'],
-      'Pret fara TVA. Achizitie': priceWithoutVat.toFixed(2),
-      'Pret cu TVA. Achizitie': priceWithVat.toFixed(2),
+      'Cant.': quantity,
+      'Pret fara TVA. Achizitie': priceWithoutVat.toFixed(3),
+      'Pret cu TVA. Achizitie': priceWithVat.toFixed(3),
       'TVA Achizitie': (vatRate * 100).toFixed(0) + '%',
       'Pret fara TVA. Vanzare': sellingPriceWithoutVat.toFixed(2),
       'Pret cu TVA. Vanzare': sellingPriceWithVat.toFixed(2),
@@ -234,8 +254,8 @@ async function mapXmlDataToFacturisOnlineNomenclatorCsv(jsonData: JsonData): Pro
       'UM': 'BUC',
       'Pret fara TVA': basePrice.toFixed(2),
       'Pret cu TVA': priceWithVat.toFixed(2),
-      'Moneda': line['cac:Price']['cbc:PriceAmount']['currencyID'] || 'RON',
-      'Cota TVA': (vatRate * 100).toFixed(2) + '%',
+      'Moneda': 'RON',
+      'Cota TVA': (vatRate * 100).toFixed(0) + '%',
       'Cod EAN': '',
       'Cod SKU': '', 
       'Alt Cod': '',
