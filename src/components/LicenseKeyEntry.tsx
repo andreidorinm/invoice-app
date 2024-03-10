@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import '../App.css'
 import { useNavigate } from 'react-router-dom';
 import { useLicenseKey } from '../providers/LicenseKeyProvider';
-import ExcelIcon from '../assets/excel.png'
+import ExcelIcon from '../assets/excel.ico'
 
 function LicenseKeyEntry() {
   const [errorMessage, setErrorMessage] = useState('');

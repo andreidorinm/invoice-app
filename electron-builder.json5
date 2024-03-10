@@ -20,7 +20,7 @@
     "artifactName": "${productName}-Mac-${version}.${ext}"
   },
   "win": {
-    "icon": "public/excel.png",
+    "icon": "public/excel.ico",
     "target": [
       {
         "target": "nsis",

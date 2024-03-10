@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Toast from './Toast';
 import ToggleSwitch from './ToggleSwitch';
-import ExcelIcon from '../assets/excel.png'
+import ExcelIcon from '../assets/excel.ico'
 
 const FileProcessor = () => {
   const [markup, setMarkup] = useState('');
