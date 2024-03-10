@@ -6,14 +6,11 @@ import ExcelIcon from '../assets/excel.ico';
 
 function LicenseKeyEntry() {
   const [errorMessage, setErrorMessage] = useState('');
-  // Adjusting the initial state to reflect the segment sizes
   const [licenseParts, setLicenseParts] = useState(["", "", "", "", ""]);
-  const segmentLengths = [8, 4, 4, 4, 12]; // Setting specific length for each segment
+  const segmentLengths = [8, 4, 4, 4, 12];
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
   const licenseKey = useLicenseKey();
-
-  
 
   useEffect(() => {
     if (inputRefs.current[0]) {
@@ -32,14 +29,41 @@ function LicenseKeyEntry() {
   };
 
   const handlePaste = (event: React.ClipboardEvent<HTMLFormElement>) => {
+    event.preventDefault();
+  
     const pasteData = event.clipboardData.getData('text').toUpperCase().replace(/\s/g, '').split('-');
+  
     if (pasteData.length === licenseParts.length) {
       const adjustedPasteData = pasteData.map((part, index) => part.slice(0, segmentLengths[index]));
       setLicenseParts(adjustedPasteData);
-      event.preventDefault();
-      inputRefs.current[licenseParts.length - 1]?.focus();
+  
+      const lastPartIndex = pasteData.length - 1;
+      if (pasteData[lastPartIndex].length === segmentLengths[lastPartIndex] && inputRefs.current[lastPartIndex + 1]) {
+        inputRefs.current[lastPartIndex + 1]?.focus();
+      } else {
+        inputRefs.current[lastPartIndex]?.focus();
+      }
+    } else {
+      const combinedData = pasteData.join('').slice(0, segmentLengths.reduce((acc, length) => acc + length, 0));
+      let position = 0;
+      const newLicenseParts = segmentLengths.map(length => {
+        const part = combinedData.slice(position, position + length);
+        position += length;
+        return part;
+      });
+  
+      setLicenseParts(newLicenseParts);
+  
+      const nextEmptyIndex = newLicenseParts.findIndex(part => part.length < 8);
+      if (nextEmptyIndex !== -1) {
+        inputRefs.current[nextEmptyIndex]?.focus();
+      } else {
+        inputRefs.current[newLicenseParts.length - 1]?.focus();
+      }
     }
   };
+  
+  
   
 
  const handleActivateLicenseKey = async (event: React.MouseEvent<HTMLButtonElement>) => {
