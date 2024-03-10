@@ -143,7 +143,7 @@ const FileProcessor = () => {
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex gap-2">
             <img src={ExcelIcon} width={40} alt="ExcelIcon" />
-            <h1 className="text-3xl font-bold">ClarFactura</h1>
+            <h1 className="text-3xl font-bold">ClarFactura in NIR</h1>
           </div>
         </div>
       </header>

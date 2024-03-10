@@ -47,7 +47,7 @@ function LicenseKeyEntry() {
         <div className='flex justify-center'>
           <img src={ExcelIcon} width={45} alt="ExcelIcon" />
         </div>
-        <h1 className="text-3xl font-semibold text-center text-dark text-gray-600">ClarFactura aici vei activa licenta ta</h1>
+        <h1 className="text-3xl font-semibold text-center text-dark text-gray-600">ClarFactura in NIR aici iti vei activa licenta</h1>
         <form className="space-y-4">
           <div>
             <label className="label">

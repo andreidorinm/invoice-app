@@ -3,9 +3,9 @@
  */
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "Clarfactura",
+  "appId": "ClarFactura in NIR",
   "asar": true,
-  "productName": "Clarfactura",
+  "productName": "ClarFactura in NIR",
   "directories": {
     "output": "release/${version}"
   },
