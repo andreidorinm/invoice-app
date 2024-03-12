@@ -16,7 +16,7 @@ const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL'];
 
 function createWindow() {
   contextMenu({
-    menu: (actions, params, browserWindow) => {
+    menu: (_actions, params, browserWindow) => {
       const isBrowserWindow = browserWindow instanceof BrowserWindow;
   
       return [
@@ -41,6 +41,7 @@ function createWindow() {
       ];
     }
   });
+  
 
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'excel.ico'),
