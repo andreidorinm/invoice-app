@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite && pnpm watch-tailwind",
     "watch-tailwind": "npx tailwindcss -i ./src/index.css -o ./dist/output.css --watch",
-    "build": "tsc && vite build && electron-builder",
+    "build": "tsc && vite build && electron-builder --win --publish=always",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
