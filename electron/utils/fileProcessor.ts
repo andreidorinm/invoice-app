@@ -2,7 +2,7 @@ import * as xml2js from 'xml2js';
 import { format } from 'fast-csv';
 import * as fs from 'fs';
 import * as path from 'path';
-import { dialog } from 'electron'; 
+import { dialog } from 'electron';
 import { CsvRow, JsonData } from '../../src/types/fileProcessor';
 import electronStore from 'electron-store';
 
@@ -46,7 +46,7 @@ async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonData): Pr
       'Accize': '',
       'Greutate': '',
       'Observatii 3': '',
-      'Observatii 4': '' 
+      'Observatii 4': ''
     };
     csvRows.push(row);
   });
@@ -92,6 +92,14 @@ async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, markupPerce
       outputVatRate = vatRate * 100;
     } else {
       outputVatRate = 'Neplatitor de TVA';
+    }
+
+    if (!isVatPayer) {
+      sellingPriceWithVat = priceWithVat * markupMultiplier;
+      sellingPriceWithoutVat = sellingPriceWithVat;
+    } else {
+      sellingPriceWithoutVat = priceWithoutVat * markupMultiplier;
+      sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
     }
 
     let row: CsvRow = {
@@ -189,29 +197,37 @@ async function processForFacturisDesktop(filePath: string, callback: (err: Error
 async function mapXmlDataToFacturisOnlineNirCsv(jsonData: JsonData, markupPercentage: number): Promise<CsvRow[]> {
   const invoiceLines = jsonData.Invoice['cac:InvoiceLine'];
   const csvRows: CsvRow[] = [];
-  
+
   const lines = Array.isArray(invoiceLines) ? invoiceLines : [invoiceLines];
-  
+
   lines.forEach((line, index) => {
     const basePrice = parseFloat(line['cac:Price']['cbc:PriceAmount']['_']);
     const vatRate = line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']
       ? parseFloat(line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']) / 100
       : 0;
-      
+
     let priceWithoutVat = parseFloat(basePrice.toFixed(2));
     if (line['cac:Item']['cbc:Name'].includes("GARANTIE SGR")) {
       priceWithoutVat = 0.50;
     }
     const priceWithVat = basePrice * (1 + vatRate);
-    const sellingPriceWithoutVat = priceWithoutVat * (1 + markupPercentage / 100);
-    const sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
-
     const productName = line['cac:Item']['cbc:Name'];
     let quantity = line['cbc:InvoicedQuantity']['_'];
     const match = productName.match(/(\d+)\s*x/i);
 
     if (match) {
       quantity = match[1];
+    }
+
+    const isVatPayer = store.get('isVatPayer', false); // This line needs to be added appropriately
+
+    let sellingPriceWithoutVat, sellingPriceWithVat;
+    if (!isVatPayer) {
+      sellingPriceWithVat = priceWithVat * (1 + markupPercentage / 100); // Adjusted according to the new rule
+      sellingPriceWithoutVat = sellingPriceWithVat; // Same as sellingPriceWithVat for non-VAT payers
+    } else {
+      sellingPriceWithoutVat = priceWithoutVat * (1 + markupPercentage / 100);
+      sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
     }
 
     let row: CsvRow = {
@@ -257,9 +273,9 @@ async function mapXmlDataToFacturisOnlineNomenclatorCsv(jsonData: JsonData): Pro
       'Moneda': 'RON',
       'Cota TVA': (vatRate * 100).toFixed(0) + '%',
       'Cod EAN': '',
-      'Cod SKU': '', 
+      'Cod SKU': '',
       'Alt Cod': '',
-      'Categorie Produs': '', 
+      'Categorie Produs': '',
       'Observatii 1': '',
       'Observatii 2': '',
       'Observatii 3': '',
