@@ -66,32 +66,33 @@ function LicenseKeyEntry() {
   
   
 
- const handleActivateLicenseKey = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleActivateLicenseKey = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     const licenseKeyValue = licenseParts.join('-');
 
-    if (licenseKeyValue.replace(/\-/g, '').length !== 32) {
-      setErrorMessage('Licenta este gresita');
-      return;
+    if (licenseKeyValue.replace(/-/g, '').length !== 32) {
+        setErrorMessage('Licența este greșită');
+        return;
+    }
+
+    if (!licenseKey) { // Check if licenseKey is not null
+        console.error("licenseKey is null"); // Handle this scenario appropriately
+        return;
     }
 
     try {
-      const response = await licenseKey.handleActivateLicenseKey(licenseKeyValue);
-      if (response.error) {
-        setErrorMessage(response.errorMessage);
-        return;
-      } else {
-        navigate('/app');
-      }
+        const response = await licenseKey.checkOrActivateLicenseKey(licenseKeyValue);
+        if (response.error) {
+            setErrorMessage(response.errorMessage);
+            return;
+        } else {
+            navigate('/app');
+        }
     } catch (error) {
-      if (error instanceof Error) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage('An unexpected error occurred');
-      }
+        setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
     }
-    
-  };
+};
+
 
   const getInputSizeClass = (maxLength: any) => {
     switch (maxLength) {

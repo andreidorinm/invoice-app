@@ -1,180 +1,116 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getLicenseKey, setLicenseKey } from "../data/IPCMessages";
-import { LemonAPIResponse, LemonAPIResponseValidateKey } from "../types/lemonSqueezy";
 import { useNavigate } from "react-router-dom";
 import LoadingScreen from "../screens/LoadingScreen";
+import axios from "axios"; // Import Axios
 
-const LicenseKeyContext = createContext({} as LicenseKeyProviderValue);
+const LicenseKeyContext = createContext<LicenseKeyProviderValue | null>(null);
 
 export function useLicenseKey() {
-    return useContext<LicenseKeyProviderValue>(LicenseKeyContext);
-}
+    const context = useContext(LicenseKeyContext);
+    if (!context) {
+      throw new Error('useLicenseKey must be used within a LicenseKeyProvider');
+    }
+    return context;
+  }
 
 export interface LicenseKeyProviderProps {
-    children: string | JSX.Element | JSX.Element[] | React.ReactNode;
+    children: React.ReactNode;
 }
 
-export interface apiMessage {
+interface apiMessage {
     success: boolean;
     error: boolean;
     errorMessage: string;
+    expiryDate?: string;
 }
 
-export interface LicenseKeyProviderValue {
-    checkIfLicenseKeyIsActivated: () => Promise<apiMessage>,
-    handleActivateLicenseKey: (licenseKey: string) => Promise<apiMessage>,
+type CheckOrActivateLicenseKeyFn = (licenseKey?: string) => Promise<apiMessage>;
+
+interface LicenseKeyProviderValue {
+    checkOrActivateLicenseKey: CheckOrActivateLicenseKeyFn;
+    expiryDate?: string;
 }
 
 const LicenseKeyProvider = ({ children }: LicenseKeyProviderProps) => {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [expiryDate, setExpiryDate] = useState<string | undefined>();
 
-    const checkIfLicenseKeyIsActivated = useCallback(async (): Promise<apiMessage> => {
-        const licenseKey = await getLicenseKey();
+    const checkOrActivateLicenseKey: CheckOrActivateLicenseKeyFn = useCallback(async (licenseKey?: string) => {
+        const keyToUse = licenseKey || await getLicenseKey();
 
-        if (!licenseKey) {
-            return {
-                error: true,
-                success: false,
-                errorMessage: 'No license key found.'
-            };
+        if (!keyToUse) {
+            setLoading(false);
+            return { error: true, success: false, errorMessage: 'No license key provided.' };
         }
 
-
-        const ret = await fetch(import.meta.env.VITE_LEMON_SQUEEZY_VALIDATE_URL,
+        try {
+            // Using Axios for the request
+            const response = await axios.post(import.meta.env.VITE_LICENSE_VALIDATION_URL, {
+                licenseKey: keyToUse
+            },
             {
-                method: 'POST',
                 headers: {
-                    'Accept': 'application/vnd.api+json',
-                    'Content-Type': 'application/vnd.api+json'
-                },
-                body: JSON.stringify({ license_key: licenseKey })
-            }
-        ).then((response) => {
-            return response.json();
-        }).then((response: LemonAPIResponseValidateKey) => {
-
-            if (response.error) {
-                console.log(response.error);
-                return {
-                    error: true,
-                    success: false,
-                    errorMessage: response.error
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
                 }
+            });
+
+            console.log("Making request to:", import.meta.env.VITE_LICENSE_VALIDATION_URL, "with key:", keyToUse);
+            const data = response.data;
+            setLoading(false);
+
+            if (!data.success) {
+                return { error: true, success: false, errorMessage: data.message || 'License operation failed.' };
             }
 
-            console.log(response);
-
-            if (response.valid && response.license_key.status !== 'inactive') {
-                setLicenseKey(response.license_key.key);
-                return {
-                    error: false,
-                    success: true,
-                    errorMessage: ''
-                };
-            } else {
-                return {
-                    error: true,
-                    success: false,
-                    errorMessage: 'License key is no longer valid or has been deactivated.'
-                }
+            setLicenseKey(keyToUse); setExpiryDate(data.expiryDate);
+            return { 
+                error: false, 
+                success: true, 
+                errorMessage: '',
+                expiryDate: data.expiryDate,
+            };
+        } catch (error) {
+            setLoading(false);
+            if (axios.isAxiosError(error) && error.response) {
+                return { error: true, success: false, errorMessage: error.response.data.message || 'An error occurred during the request.' };
             }
-        }).catch((error) => {
-            return {
-                error: true,
-                success: false,
-                errorMessage: error.message
-            }
-        })
-
-
-        return ret ?? {
-            error: false,
-            success: true,
-            errorMessage: ''
-        };
+            console.log("Axios request failed with error:", error);
+            return { error: true, success: false, errorMessage: 'An unknown error occurred.' };
+        }
     }, []);
 
-    const handleActivateLicenseKey = async (licenseKey: string): Promise<apiMessage> => {
-        if (licenseKey === '') {
-            throw Error('Please enter a valid license key.')
-        }
-
-        const ret = await fetch(import.meta.env.VITE_LEMON_SQUEEZY_ACTIVATE_URL,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/vnd.api+json',
-                    'Content-Type': 'application/vnd.api+json'
-                },
-                body: JSON.stringify({ license_key: licenseKey, instance_name: import.meta.env.VITE_LEMON_SQUEEZY_INSTANCE_NAME })
-            }
-        ).then((response) => {
-            return response.json();
-        }).then((response: LemonAPIResponse) => {
-            if (response.error) {
-                setLicenseKey('');
-                return {
-                    error: true,
-                    success: false,
-                    errorMessage: response.error
-                }
-            }
-
-            console.log(response);
-
-            setLicenseKey(response.license_key.key);
-
-            if (response.activated) {
-                return {
-                    error: false,
-                    success: true,
-                    errorMessage: ''
-                }
-            }
-        }).catch((error) => {
-            return {
-                error: true,
-                success: false,
-                errorMessage: error.message
-            }
-        })
-
-        return ret ?? {
-            error: false,
-            success: true,
-            errorMessage: ''
-        }
-    }
-
     useEffect(() => {
-        const initializeLicenseKeyCheck = async () => {
-            const response = await checkIfLicenseKeyIsActivated();
+        checkOrActivateLicenseKey().then(response => {
             if (response.error) {
                 navigate('/');
             } else {
                 navigate('/app');
             }
-            setLoading(false);
+        });
+    }, [checkOrActivateLicenseKey, navigate]);
+
+    useEffect(() => {
+        const periodicCheck = async () => {
+            await checkOrActivateLicenseKey();
         };
 
-        initializeLicenseKeyCheck();
-    }, [checkIfLicenseKeyIsActivated, navigate]);
+        periodicCheck();
 
-    const value = {
-        checkIfLicenseKeyIsActivated,
-        handleActivateLicenseKey,
-    }
+        const intervalId = setInterval(periodicCheck, 24 * 60 * 60 * 1000);
+
+        return () => clearInterval(intervalId);
+    }, [checkOrActivateLicenseKey, navigate]);
+
+    const contextValue = { checkOrActivateLicenseKey, expiryDate };
 
     return (
-        <LicenseKeyContext.Provider value={value}>
-            {loading ? (
-                <LoadingScreen />
-            ) : (
-                children
-            )}
+        <LicenseKeyContext.Provider value={contextValue}>
+            {loading ? <LoadingScreen /> : children}
         </LicenseKeyContext.Provider>
-    )
+    );
 };
 
-export default LicenseKeyProvider
+export default LicenseKeyProvider;

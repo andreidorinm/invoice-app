@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Toast from './Toast';
 import ToggleSwitch from './ToggleSwitch';
 import ExcelIcon from '../assets/excel.ico'
+import { useLicenseKey } from '../providers/LicenseKeyProvider';
 
 const FileProcessor = () => {
   const [markup, setMarkup] = useState('');
@@ -10,6 +11,29 @@ const FileProcessor = () => {
   const [facturisType, setFacturisType] = useState('desktop');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const { expiryDate } = useLicenseKey();
+
+  const calculateTimeLeft = () => {
+    if (!expiryDate) {
+      return 'Expiry date not available';
+    }
+
+    const currentDate = new Date();
+    const expiry = new Date(expiryDate);
+    const timeLeft = expiry.getTime() - currentDate.getTime(); // Time left in milliseconds
+
+    const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+    return daysLeft > 0 ? `${daysLeft} zile ramase pana la expirare` : 'Licenta a expirat';
+  };
+
+
+  useEffect(() => {
+    if (expiryDate) {
+      const timeLeftMessage = calculateTimeLeft();
+      setShowToast(true);
+      setToastMessage(timeLeftMessage);
+    }
+  }, [expiryDate]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -138,6 +162,12 @@ const FileProcessor = () => {
 
   return (
     <div className="flex flex-col bg-gray-100 h-full mt-4 container-factura">
+      {expiryDate && (
+        <div className="fixed right-0 top-0 p-4 space-y-2">
+          <span className="block text-right text-sm text-white bg-gray-800 p-2 rounded">Licenta expira pe data: {expiryDate}</span>
+          <span className="block text-right text-sm text-white bg-gray-800 p-2 rounded">{calculateTimeLeft()}</span>
+        </div>
+      )}
       <Toast message={toastMessage} isVisible={showToast} onClose={closeToast} />
       <header className="p-6 bg-blue-600 text-white">
         <div className="container mx-auto flex justify-between items-center">

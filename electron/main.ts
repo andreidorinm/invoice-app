@@ -18,7 +18,7 @@ function createWindow() {
   contextMenu({
     menu: (_actions, params, browserWindow) => {
       const isBrowserWindow = browserWindow instanceof BrowserWindow;
-  
+
       return [
         {
           label: 'Copiază',
@@ -41,13 +41,14 @@ function createWindow() {
       ];
     }
   });
-  
+
 
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'excel.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       spellcheck: true,
+      webSecurity: false,
     },
   });
 
@@ -61,6 +62,8 @@ function createWindow() {
     win.loadFile(path.join(process.env.DIST, 'index.html'));
   }
 }
+
+app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors')
 
 
 app.on('window-all-closed', () => {
