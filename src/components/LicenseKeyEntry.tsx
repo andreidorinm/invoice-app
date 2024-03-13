@@ -125,7 +125,7 @@ function LicenseKeyEntry() {
                   value={part}
                   onChange={(e) => handleInputChange(index, e)}
                   className={`input input-bordered input-primary ${getInputSizeClass(segmentLengths[index])}`}
-                  placeholder={`Segment ${index + 1}`}
+                  placeholder={`${'X'.repeat(segmentLengths[index])}`}
                 />
               ))}
             </div>
