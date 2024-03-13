@@ -28,6 +28,13 @@ function LicenseKeyEntry() {
     }
   };
 
+  const handleKeyDown = (index: number, event: any) => {
+    if (event.key === "Backspace" && licenseParts[index].length === 0 && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+
   const handlePaste = (event: React.ClipboardEvent<HTMLFormElement>) => {
     event.preventDefault();
   
@@ -62,9 +69,6 @@ function LicenseKeyEntry() {
       }
     }
   };
-  
-  
-  
 
   const handleActivateLicenseKey = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -75,8 +79,8 @@ function LicenseKeyEntry() {
         return;
     }
 
-    if (!licenseKey) { // Check if licenseKey is not null
-        console.error("licenseKey is null"); // Handle this scenario appropriately
+    if (!licenseKey) {
+        console.error("licenseKey is null");
         return;
     }
 
@@ -124,6 +128,7 @@ function LicenseKeyEntry() {
                   maxLength={segmentLengths[index]}
                   value={part}
                   onChange={(e) => handleInputChange(index, e)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
                   className={`input input-bordered input-primary ${getInputSizeClass(segmentLengths[index])}`}
                   placeholder={`${'X'.repeat(segmentLengths[index])}`}
                 />

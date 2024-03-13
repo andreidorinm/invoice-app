@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { getLicenseKey, setLicenseKey } from "../data/IPCMessages";
 import { useNavigate } from "react-router-dom";
 import LoadingScreen from "../screens/LoadingScreen";
@@ -36,6 +36,7 @@ const LicenseKeyProvider = ({ children }: LicenseKeyProviderProps) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState<boolean>(true);
     const [expiryDate, setExpiryDate] = useState<string | undefined>();
+    const hasCheckedOnLoad = useRef(false);
 
     const checkOrActivateLicenseKey: CheckOrActivateLicenseKeyFn = useCallback(async (licenseKey?: string) => {
         const keyToUse = licenseKey || await getLicenseKey();
@@ -83,26 +84,25 @@ const LicenseKeyProvider = ({ children }: LicenseKeyProviderProps) => {
     }, []);
 
     useEffect(() => {
-        checkOrActivateLicenseKey().then(response => {
+        if (!hasCheckedOnLoad.current) {
+          checkOrActivateLicenseKey().then(response => {
             if (response.error) {
-                navigate('/');
+              navigate('/');
             } else {
-                navigate('/app');
+              navigate('/app');
             }
-        });
-    }, [checkOrActivateLicenseKey, navigate]);
+          });
+          hasCheckedOnLoad.current = true;
+        }
+      }, [checkOrActivateLicenseKey, navigate]);
 
     useEffect(() => {
-        const periodicCheck = async () => {
-            await checkOrActivateLicenseKey();
-        };
-
-        periodicCheck();
-
-        const intervalId = setInterval(periodicCheck, 24 * 60 * 60 * 1000);
-
+        const intervalId = setInterval(() => {
+          checkOrActivateLicenseKey();
+        }, 24 * 60 * 60 * 1000);
+      
         return () => clearInterval(intervalId);
-    }, [checkOrActivateLicenseKey, navigate]);
+      }, [checkOrActivateLicenseKey]); 
 
     const contextValue = { checkOrActivateLicenseKey, expiryDate };
 
