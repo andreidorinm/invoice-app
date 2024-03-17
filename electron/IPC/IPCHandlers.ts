@@ -2,6 +2,7 @@ import { IpcMainEvent, IpcMainInvokeEvent, ipcMain, dialog } from "electron";
 import { IPC_ACTIONS } from "./IPCActions";
 import electronStore from 'electron-store';
 import { processForFacturisDesktop, processForFacturisOnline } from '../utils/fileProcessor'
+const { v4: uuidv4 } = require('uuid');
 
 const {
     SET_LICENSE_KEY,
@@ -13,7 +14,8 @@ const {
     SELECT_SAVE_PATH,
     OPEN_FILE_DIALOG,
     SET_FACTURIS_TYPE,
-    GET_FACTURIS_TYPE
+    GET_FACTURIS_TYPE,
+    GET_DEVICE_ID
 } = IPC_ACTIONS.Window;
 
 const handleSetLicenseKey = (_event: IpcMainEvent, key: string) => {
@@ -129,6 +131,16 @@ const handleSelectSavePath = async (_event: IpcMainInvokeEvent): Promise<string 
     }
 };
 
+const handleGetDeviceId = (_event: IpcMainInvokeEvent): string => {
+    const store = new electronStore();
+    let deviceId = store.get('deviceId') as string | undefined;
+    if (!deviceId) {
+        deviceId = uuidv4();
+        store.set('deviceId', deviceId);
+    }
+    return deviceId as string;
+}
+
 export const registerIPCHandlers = () => {
     ipcMain.on(SET_LICENSE_KEY, handleSetLicenseKey);
     ipcMain.handle(GET_LICENSE_KEY, (event, key) => handleGetLicenseKey(event, key));
@@ -144,4 +156,6 @@ export const registerIPCHandlers = () => {
 
     ipcMain.on(SET_FACTURIS_TYPE, handleSetFacturisType);
     ipcMain.handle(GET_FACTURIS_TYPE, handleGetFacturisType);
+
+    ipcMain.handle(GET_DEVICE_ID, handleGetDeviceId);
 }

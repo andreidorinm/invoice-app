@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-const { setLicenseKey, getLicenseKey, setMarkupPercentage, getMarkupPercentage, setVatPayerStatus, getVatPayerStatus, setFacturisType, getFacturisType } = window['api'];
+const { setLicenseKey, getLicenseKey, setMarkupPercentage, getMarkupPercentage, setVatPayerStatus, getVatPayerStatus, setFacturisType, getFacturisType, getDeviceId } = window['api'];
 
 export {
     setLicenseKey,
@@ -10,6 +10,6 @@ export {
     setVatPayerStatus,
     getVatPayerStatus,
     setFacturisType,
-    getFacturisType
-
+    getFacturisType,
+    getDeviceId
 }

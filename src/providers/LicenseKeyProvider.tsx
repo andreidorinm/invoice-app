@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { getLicenseKey, setLicenseKey } from "../data/IPCMessages";
+import { getDeviceId, getLicenseKey, setLicenseKey } from "../data/IPCMessages";
 import { useNavigate } from "react-router-dom";
 import LoadingScreen from "../screens/LoadingScreen";
-import axios from "axios"; // Import Axios
+import axios from "axios";
 
 const LicenseKeyContext = createContext<LicenseKeyProviderValue | null>(null);
 
@@ -47,9 +47,11 @@ const LicenseKeyProvider = ({ children }: LicenseKeyProviderProps) => {
         }
 
         try {
-            // Using Axios for the request
+            const deviceId = await getDeviceId();
+
             const response = await axios.post(import.meta.env.VITE_LICENSE_VALIDATION_URL, {
-                licenseKey: keyToUse
+                licenseKey: keyToUse,
+                deviceId: deviceId
             },
             {
                 headers: {

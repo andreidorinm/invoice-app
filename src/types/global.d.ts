@@ -17,6 +17,7 @@ declare global {
       selectSavePath: () => Promise<string>;
       setFacturisType: (type: string) => void;
       getFacturisType: () => Promise<string>;
+      getDeviceId: () => Promise<string>;
     };
   }
 }

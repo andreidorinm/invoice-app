@@ -11,7 +11,8 @@ const {
   SELECT_SAVE_PATH,
   OPEN_FILE_DIALOG,
   SET_FACTURIS_TYPE,
-  GET_FACTURIS_TYPE
+  GET_FACTURIS_TYPE,
+  GET_DEVICE_ID
 } = IPC_ACTIONS.Window;
 
 // --------- Expose some API to the Renderer process ---------
@@ -141,6 +142,7 @@ const safeExposeIpcRenderer = () => ({
   openFileDialog: () => ipcRenderer.send(OPEN_FILE_DIALOG),
   setFacturisType: (facturisType: any) => ipcRenderer.send(SET_FACTURIS_TYPE, facturisType),
   getFacturisType: () => ipcRenderer.invoke(GET_FACTURIS_TYPE),
+  getDeviceId: () => ipcRenderer.invoke(GET_DEVICE_ID),
   processFile: (filePath: any) => ipcRenderer.send('process-file', filePath),
   receiveMessage: (channel: any, func: any) => {
     const validChannels = ['csv-written', 'file-processing-error', 'license-key-updated'];
