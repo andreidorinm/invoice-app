@@ -13,9 +13,11 @@ function formatDate(ymdDate: string): string {
   return `${day}-${month}-${year}`;
 }
 
-async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonData): Promise<CsvRow[]> {
+async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonData, markupPercentage: number): Promise<CsvRow[]> {
   const invoiceLines = jsonData.Invoice['cac:InvoiceLine'];
   const csvRows: CsvRow[] = [];
+  const isVatPayer = store.get('isVatPayer', false);
+  const markupMultiplier = 1 + markupPercentage / 100;
 
   const lines = Array.isArray(invoiceLines) ? invoiceLines : [invoiceLines];
 
@@ -25,12 +27,26 @@ async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonData): Pr
       ? parseFloat(line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']) / 100
       : 0;
 
+    let priceWithoutVat = basePrice;
+    let priceWithVat = basePrice * (1 + vatRate);
+    let sellingPriceWithoutVat, sellingPriceWithVat;
+
+    if (isVatPayer) {
+      sellingPriceWithoutVat = priceWithoutVat * markupMultiplier;
+      sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
+    } else {
+      sellingPriceWithVat = priceWithVat * markupMultiplier;
+      sellingPriceWithoutVat = sellingPriceWithVat; // Since VAT details don't change the logic for non-payers, can keep same or use only sellingPriceWithVat
+    }
+
+    let outputVatRate = isVatPayer ? (vatRate * 100).toFixed(0) + '%' : 'Neplatitor de TVA';
+
     let row: CsvRow = {
       'Nr. crt.': index + 1,
       'Nume Produs': line['cac:Item']['cbc:Name'],
       'UM': 'BUC',
-      'Pret fara TVA': basePrice.toFixed(2),
-      'Pret cu TVA': (basePrice * (1 + vatRate)).toFixed(2),
+      'Pret fara TVA': sellingPriceWithoutVat.toFixed(2),
+      'Pret cu TVA': sellingPriceWithVat.toFixed(2),
       'Moneda': line['cac:Price']['cbc:PriceAmount']['currencyID'] || 'RON',
       'Cod EAN': '',
       'Cod Produs': '',
@@ -41,7 +57,7 @@ async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonData): Pr
       'Pret 2 cu TVA': '',
       'Pret 3 fara TVA': '',
       'Pret 3 cu TVA': '',
-      'Cota TVA': (vatRate * 100).toFixed(0) + '%',
+      'Cota TVA': outputVatRate,
       'Categorie Produse': '',
       'Accize': '',
       'Greutate': '',
@@ -81,15 +97,11 @@ async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, markupPerce
 
     const productName = line['cac:Item']['cbc:Name'];
     let quantity = line['cbc:InvoicedQuantity']['_'];
-    const match = productName.match(/(\d+)\s*x/i);
 
-    if (match) {
-      quantity = match[1];
-    }
 
     let outputVatRate: any;
     if (isVatPayer) {
-      outputVatRate = vatRate * 100;
+      outputVatRate = vatRate * 100 + '%';
     } else {
       outputVatRate = 'Neplatitor de TVA';
     }
@@ -122,7 +134,6 @@ async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, markupPerce
 
   return csvRows;
 }
-
 
 async function writeCsvData(outputPath: string, csvData: CsvRow[], callback: (err: Error | null, message?: string) => void) {
   const csvStream = format({ headers: true });
@@ -184,7 +195,7 @@ async function processForFacturisDesktop(filePath: string, callback: (err: Error
         const nirCsvData = await mapXmlDataToFacturisDesktopNirCsv(result, markupPercentageNumber);
         await writeCsvData(nirOutputPath, nirCsvData, callback);
 
-        const nomenclatorCsvData = await mapXmlDataToFacturisDesktopNomenclatorCsv(result);
+        const nomenclatorCsvData = await mapXmlDataToFacturisDesktopNomenclatorCsv(result, markupPercentageNumber);
         await writeCsvData(nomenclatorOutputPath, nomenclatorCsvData, callback);
       });
     });
@@ -213,21 +224,18 @@ async function mapXmlDataToFacturisOnlineNirCsv(jsonData: JsonData, markupPercen
     const priceWithVat = basePrice * (1 + vatRate);
     const productName = line['cac:Item']['cbc:Name'];
     let quantity = line['cbc:InvoicedQuantity']['_'];
-    const match = productName.match(/(\d+)\s*x/i);
 
-    if (match) {
-      quantity = match[1];
-    }
+    const isVatPayer = store.get('isVatPayer', false); 
 
-    const isVatPayer = store.get('isVatPayer', false); // This line needs to be added appropriately
-
-    let sellingPriceWithoutVat, sellingPriceWithVat;
+    let sellingPriceWithoutVat, sellingPriceWithVat, outputVatRate;
     if (!isVatPayer) {
-      sellingPriceWithVat = priceWithVat * (1 + markupPercentage / 100); // Adjusted according to the new rule
+      sellingPriceWithVat = priceWithVat * (1 + markupPercentage / 100);
       sellingPriceWithoutVat = sellingPriceWithVat; // Same as sellingPriceWithVat for non-VAT payers
+      outputVatRate = 'Neplatitor de TVA'; // Displaying non-VAT payer status
     } else {
       sellingPriceWithoutVat = priceWithoutVat * (1 + markupPercentage / 100);
       sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
+      outputVatRate = (vatRate * 100).toFixed(0) + '%'; // Calculating VAT rate for VAT payers
     }
 
     let row: CsvRow = {
@@ -241,7 +249,7 @@ async function mapXmlDataToFacturisOnlineNirCsv(jsonData: JsonData, markupPercen
       'TVA Achizitie': (vatRate * 100).toFixed(0) + '%',
       'Pret fara TVA. Vanzare': sellingPriceWithoutVat.toFixed(2),
       'Pret cu TVA. Vanzare': sellingPriceWithVat.toFixed(2),
-      'TVA Vanzare': (vatRate * 100).toFixed(0) + '%',
+      'TVA Vanzare': outputVatRate, // Adjusted VAT output rate display
       'Moneda Achizitie': 'RON',
       'Moneda Vanzare': 'RON',
       'Lot Produs': '',
@@ -253,25 +261,43 @@ async function mapXmlDataToFacturisOnlineNirCsv(jsonData: JsonData, markupPercen
   return csvRows;
 }
 
-async function mapXmlDataToFacturisOnlineNomenclatorCsv(jsonData: JsonData): Promise<CsvRow[]> {
+async function mapXmlDataToFacturisOnlineNomenclatorCsv(jsonData: JsonData, markupPercentage: number): Promise<CsvRow[]> {
   const invoiceLines = jsonData.Invoice['cac:InvoiceLine'];
   const csvRows: CsvRow[] = [];
+  const isVatPayer = store.get('isVatPayer', false);
+  const markupMultiplier = 1 + markupPercentage / 100;
 
   const lines = Array.isArray(invoiceLines) ? invoiceLines : [invoiceLines];
 
   lines.forEach((line, index) => {
     const basePrice = parseFloat(line['cac:Price']['cbc:PriceAmount']['_']);
-    const vatRate = line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent'] ? parseFloat(line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']) / 100 : 0;
+    const vatRate = line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']
+      ? parseFloat(line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']) / 100
+      : 0;
+
+    const priceWithoutVat = basePrice;
     const priceWithVat = basePrice * (1 + vatRate);
+
+    let sellingPriceWithoutVat, sellingPriceWithVat, outputVatRate;
+
+    if (!isVatPayer) {
+      sellingPriceWithVat = priceWithVat * markupMultiplier;
+      sellingPriceWithoutVat = sellingPriceWithVat; // For non-VAT payers, might typically be unused or set to base price
+      outputVatRate = 'Neplatitor de TVA'; // Displaying non-VAT payer status
+    } else {
+      sellingPriceWithoutVat = priceWithoutVat * markupMultiplier;
+      sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
+      outputVatRate = (vatRate * 100).toFixed(0) + '%'; // Calculating VAT rate for VAT payers
+    }
 
     let row: CsvRow = {
       'Ctr.': index + 1,
       'Produs': line['cac:Item']['cbc:Name'],
       'UM': 'BUC',
-      'Pret fara TVA': basePrice.toFixed(2),
-      'Pret cu TVA': priceWithVat.toFixed(2),
-      'Moneda': 'RON',
-      'Cota TVA': (vatRate * 100).toFixed(0) + '%',
+      'Pret fara TVA': sellingPriceWithoutVat.toFixed(2),
+      'Pret cu TVA': sellingPriceWithVat.toFixed(2),
+      'Moneda': line['cac:Price']['cbc:PriceAmount']['currencyID'] || 'RON',
+      'Cota TVA': outputVatRate, // Adjusted VAT output rate display
       'Cod EAN': '',
       'Cod SKU': '',
       'Alt Cod': '',
@@ -340,7 +366,7 @@ async function processForFacturisOnline(filePath: string, callback: (err: Error 
         const nirCsvData = await mapXmlDataToFacturisOnlineNirCsv(result, markupPercentageNumber);
         await writeCsvData(nirOutputPath, nirCsvData, callback);
 
-        const nomenclatorCsvData = await mapXmlDataToFacturisOnlineNomenclatorCsv(result);
+        const nomenclatorCsvData = await mapXmlDataToFacturisOnlineNomenclatorCsv(result, markupPercentageNumber);
         await writeCsvData(nomenclatorOutputPath, nomenclatorCsvData, callback);
       });
     });
