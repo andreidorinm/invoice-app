@@ -77,53 +77,47 @@ async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, markupPerce
   const lines = Array.isArray(invoiceLines) ? invoiceLines : [invoiceLines];
 
   lines.forEach((line, index) => {
-    const basePrice = parseFloat(line['cac:Price']['cbc:PriceAmount']['_']);
-    const vatRate = line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']
+    let basePrice = parseFloat(line['cac:Price']['cbc:PriceAmount']['_']);
+    let vatRate = line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']
       ? parseFloat(line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']) / 100
       : 0;
 
-    let priceWithoutVat = parseFloat(basePrice.toFixed(2));
-    if (line['cac:Item']['cbc:Name'].includes("GARANTIE SGR")) {
-      priceWithoutVat = 0.50;
-    }
-    const priceWithVat = basePrice * (1 + vatRate);
+    let priceWithoutVat = basePrice;
+    let priceWithVat = parseFloat((basePrice * (1 + vatRate)).toFixed(4)); // Convert back to number after rounding
 
     const isVatPayer = store.get('isVatPayer', false);
     const markupMultiplier = 1 + markupPercentage / 100;
 
-    let sellingPriceWithoutVat = priceWithoutVat * markupMultiplier;
-    let sellingPriceWithVat = isVatPayer ? sellingPriceWithoutVat * (1 + vatRate) : sellingPriceWithoutVat; // Keep the same value if not a VAT payer
-
-
-    const productName = line['cac:Item']['cbc:Name'];
-    let quantity = line['cbc:InvoicedQuantity']['_'];
-
-
-    let outputVatRate: any;
-    if (isVatPayer) {
-      outputVatRate = vatRate * 100 + '%';
-    } else {
-      outputVatRate = 'Neplatitor de TVA';
+    // Check for special case items
+    if (line['cac:Item']['cbc:Name'].includes("GARANTIE SGR")) {
+      priceWithoutVat = 0.50;
+      priceWithVat = 0.50;
+      vatRate = 0; // Set VAT rate to 0% for this specific item
     }
+
+    let sellingPriceWithoutVat = parseFloat((priceWithoutVat * markupMultiplier).toFixed(3)); // Convert back to number after rounding
+    let sellingPriceWithVat = parseFloat((sellingPriceWithoutVat * (1 + vatRate)).toFixed(4)); // Convert back to number after rounding
 
     if (!isVatPayer) {
-      sellingPriceWithVat = priceWithVat * markupMultiplier;
-      sellingPriceWithoutVat = sellingPriceWithVat;
-    } else {
-      sellingPriceWithoutVat = priceWithoutVat * markupMultiplier;
-      sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
+      sellingPriceWithVat = parseFloat((priceWithVat * markupMultiplier).toFixed(4)); // Convert back to number after rounding
+      sellingPriceWithoutVat = sellingPriceWithVat; // Non-VAT payers use the same value for without VAT
     }
+
+    const productName = line['cac:Item']['cbc:Name'];
+    let quantity = parseFloat(line['cbc:InvoicedQuantity']['_']); // Ensure quantity is a number
+
+    let outputVatRate = isVatPayer ? (vatRate * 100).toFixed(0) + '%' : 'Neplatitor de TVA';
 
     let row: CsvRow = {
       'Nr. crt.': index + 1,
       'Nume Produs': productName,
       'UM': 'BUC',
       'Cod Produs EAN': '',
-      'Cantitate': quantity,
+      'Cantitate': quantity.toString(),
       'Pret achizitie fara TVA': priceWithoutVat.toFixed(3),
-      'Pret achizitie cu TVA': priceWithVat.toFixed(3),
-      'Pret vanzare fara TVA': sellingPriceWithoutVat.toFixed(2),
-      'Pret vanzare cu TVA': sellingPriceWithVat.toFixed(2),
+      'Pret achizitie cu TVA': priceWithVat.toString(),
+      'Pret vanzare fara TVA': sellingPriceWithoutVat.toString(),
+      'Pret vanzare cu TVA': sellingPriceWithVat.toString(),
       'Lot': '',
       'Data expirarii (dd-mm-yyyy)': '',
       'Cota TVA intrare': (vatRate * 100).toFixed(0) + '%',
@@ -169,7 +163,7 @@ async function processForFacturisDesktop(filePath: string, callback: (err: Error
     const markupPercentage = store.get('markupPercentage', 0);
     const markupPercentageNumber = Number(markupPercentage);
 
-    fs.readFile(filePath, async (err, data) => {
+    fs.readFile(filePath, async (err: any, data: any) => {
       if (err) {
         console.error('Error reading XML file:', err);
         return callback(err);
