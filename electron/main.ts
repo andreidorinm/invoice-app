@@ -61,7 +61,11 @@ function createWindow() {
   } else {
     win.loadFile(path.join(process.env.DIST, 'index.html'));
   }
+
+win.maximize();
+
 }
+
 
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors')
 

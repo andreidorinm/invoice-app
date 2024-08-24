@@ -14,6 +14,7 @@
     "electron-context-menu": "^3.6.1",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.1.8",
+    "exceljs": "^4.4.0",
     "fast-csv": "^5.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

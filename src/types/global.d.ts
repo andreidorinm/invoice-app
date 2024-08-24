@@ -15,9 +15,10 @@ declare global {
       setVatPayerStatus: (isVatPayer: boolean) => Promise<void>;
       getVatPayerStatus: () => Promise<boolean>;
       selectSavePath: () => Promise<string>;
-      setFacturisType: (type: string) => void;
+      setFacturisType: (type: string) => Promise<void>;
       getFacturisType: () => Promise<string>;
       getDeviceId: () => Promise<string>;
+      processXmlForFreya: (filePath: string) => void;
     };
   }
 }

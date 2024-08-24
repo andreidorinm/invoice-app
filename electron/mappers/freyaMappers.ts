@@ -1,4 +1,4 @@
-import { parseStringPromise, Builder } from 'xml2js';
+import { parseStringPromise } from 'xml2js';
 import store from '../config/electronStore';
 
 export async function mapXmlToNirFreyaXml(xmlData: any) {
@@ -7,7 +7,8 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
   const markupPercentage: any = store.get('markupPercentage', 0);
   const isVatPayer = store.get('isVatPayer', false);
 
-  const nirData = {
+  // This now returns a JavaScript object
+  return {
     NIR: {
       DocumentSeries: invoice['cbc:ID'][0],
       DocumentNo: invoice['cbc:ID'][0],
@@ -18,7 +19,7 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
       Products: invoice['cac:InvoiceLine'].map((line: any) => {
         const basePrice = parseFloat(line['cac:Price'][0]['cbc:PriceAmount'][0]['_']);
         const vatRate = parseFloat(line['cac:Item'][0]['cac:ClassifiedTaxCategory'][0]['cbc:Percent'][0]) / 100;
-        let priceWithoutVat = parseFloat(basePrice.toFixed(2));
+        const priceWithoutVat = parseFloat(basePrice.toFixed(2));
         const priceWithVat = basePrice * (1 + vatRate);
 
         let sellingPriceWithoutVat, sellingPriceWithVat, outputVatRate;
@@ -34,17 +35,15 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
 
         return {
           ProductName: line['cac:Item'][0]['cbc:Name'][0],
-          ProductCode: '',  // Assuming there is no distinct product code
+          ProductCode: '',
           Units: line['cbc:InvoicedQuantity'][0]['_'],
           UnitPriceWithoutVat: sellingPriceWithoutVat.toFixed(2),
-          Discount: '0.00',  // Assuming no discount, adjust if necessary
+          Discount: '0.00',
           VatRate: outputVatRate,
           MeasureUnit: line['cbc:InvoicedQuantity'][0]['$']['unitCode']
         };
       })
     }
   };
-
-  const builder = new Builder();
-  return builder.buildObject(nirData);
 }
+

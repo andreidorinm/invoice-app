@@ -140,12 +140,13 @@ const safeExposeIpcRenderer = () => ({
   getVatPayerStatus: () => ipcRenderer.invoke(GET_VAT_PAYER_STATUS),
   selectSavePath: () => ipcRenderer.invoke(SELECT_SAVE_PATH),
   openFileDialog: () => ipcRenderer.send(OPEN_FILE_DIALOG),
-  setFacturisType: (facturisType: any) => ipcRenderer.send(SET_FACTURIS_TYPE, facturisType),
+  setFacturisType: (facturisType: any) => ipcRenderer.invoke(SET_FACTURIS_TYPE, facturisType),
   getFacturisType: () => ipcRenderer.invoke(GET_FACTURIS_TYPE),
   getDeviceId: () => ipcRenderer.invoke(GET_DEVICE_ID),
   processFile: (filePath: any) => ipcRenderer.send('process-file', filePath),
+  processXmlForFreya: (filePath: string) => ipcRenderer.send('process-xml-for-freya', filePath),
   receiveMessage: (channel: any, func: any) => {
-    const validChannels = ['csv-written', 'file-processing-error', 'license-key-updated'];
+    const validChannels = ['csv-written', 'file-processing-error', 'license-key-updated',  'freya-processing-error'];
     if (validChannels.includes(channel)) {
       const subscription = (_event: any, ...args: any) => func(...args);
       ipcRenderer.on(channel, subscription);

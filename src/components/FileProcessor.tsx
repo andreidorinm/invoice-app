@@ -9,10 +9,10 @@ const FileProcessor = () => {
   const [markup, setMarkup] = useState('');
   const [isVatPayer, setIsVatPayer] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [facturisType, setFacturisType] = useState('desktop');
+  const [facturisType, setFacturisType] = useState('facturis desktop');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('default');
+  const [activeTab, setActiveTab] = useState('facturis');
   const { expiryDate } = useLicenseKey();
 
   const calculateTimeLeft = () => {
@@ -78,13 +78,13 @@ const FileProcessor = () => {
     }
   };
 
-  const handleFacturisTypeChange = async (newType: 'desktop' | 'online') => {
+  const handleFacturisTypeChange = async (newType: any) => {
     setFacturisType(newType);
     try {
       await window.api.setFacturisType(newType);
       console.log(`Tipul de Facturis a fost setat: ${newType}`);
       setShowToast(true);
-      setToastMessage(`Tipul de Facturis a fost setat: ${newType}`);
+      setToastMessage(`Tipul de factura a fost setat: ${newType}`);
     } catch (error) {
       console.error("Nu am reusit sa setam tipul de Facturis:", error);
     }
@@ -164,6 +164,9 @@ const FileProcessor = () => {
 
   const handleTabClick = (tabName: any) => {
     setActiveTab(tabName);
+    if (tabName === 'freya') {
+      handleFacturisTypeChange('freya');
+    }
   };
 
   return (
@@ -175,18 +178,34 @@ const FileProcessor = () => {
         </div>
       )}
       <Toast message={toastMessage} isVisible={showToast} onClose={closeToast} />
-      <header className="p-6 bg-blue-600 text-white">
+      <header className="p-4 bg-blue-600 text-white">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex gap-2">
-            <img src={ExcelIcon} width={40} alt="ExcelIcon" />
-            <h1 className="text-3xl font-bold">ClarFactura in NIR</h1>
-            <button className={`tab-button ${activeTab === 'default' ? 'active' : ''}`} onClick={() => handleTabClick('default')}>Default</button>
-            <button className={`tab-button ${activeTab === 'freya' ? 'active' : ''}`} onClick={() => handleTabClick('freya')}>Freya</button>
+          <div className="flex items-center space-x-3">
+            <img src={ExcelIcon} width={40} alt="Excel Icon" />
+            <h1 className="text-3xl font-bold tracking-wide">ClarFactura in NIR</h1>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center">
+            <p className="text-sm font-medium">Te rog alege tipul de factura:</p>
+            <div className="flex space-x-2 mt-2">
+              <button
+                className={`px-4 py-2 rounded transition-all duration-300 shadow-sm ${activeTab === 'facturis' ? 'bg-green-600 text-white' : 'bg-gray-200 text-black hover:bg-green-500 hover:text-white'}`}
+                onClick={() => handleTabClick('facturis')}
+              >
+                Facturis
+              </button>
+              <button
+                className={`px-4 py-2 rounded transition-all duration-300 shadow-sm ${activeTab === 'freya' ? 'bg-green-600 text-white' : 'bg-gray-200 text-black hover:bg-green-500 hover:text-white'}`}
+                onClick={() => handleTabClick('freya')}
+              >
+                Freya
+              </button>
+            </div>
           </div>
         </div>
       </header>
       <div className="flex flex-grow overflow-hidden bg-black">
-        {activeTab === 'default' && (
+        {activeTab === 'facturis' && (
           <>
             <main className="p-6 bg-white m-4 rounded-lg shadow-lg">
               <div className="mt-4 w-80">
@@ -204,14 +223,14 @@ const FileProcessor = () => {
                   <h3 className="text-xl font-semibold mb-2 text-black">Tipul de Facturis</h3>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => handleFacturisTypeChange('desktop')}
-                      className={`flex-1 button-facturis-type py-4 rounded-lg ${facturisType === 'desktop' ? 'bg-blue-500 text-white' : 'bg-gray-200'} transition duration-150 ease-in-out`}
+                      onClick={() => handleFacturisTypeChange('facturis desktop')}
+                      className={`flex-1 button-facturis-type py-4 rounded-lg ${facturisType === 'facturis desktop' ? 'bg-blue-500 text-white' : 'bg-gray-200'} transition duration-150 ease-in-out`}
                     >
                       Desktop
                     </button>
                     <button
-                      onClick={() => handleFacturisTypeChange('online')}
-                      className={`flex-1 button-facturis-type py-4 rounded-lg ${facturisType === 'online' ? 'bg-blue-500 text-white' : 'bg-gray-200'} transition duration-150 ease-in-out`}
+                      onClick={() => handleFacturisTypeChange('facturis online')}
+                      className={`flex-1 button-facturis-type py-4 rounded-lg ${facturisType === 'facturis online' ? 'bg-blue-500 text-white' : 'bg-gray-200'} transition duration-150 ease-in-out`}
                     >
                       Online
                     </button>

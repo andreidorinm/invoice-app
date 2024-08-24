@@ -53,10 +53,21 @@ const handleProcessXmlForFreya = (_event: IpcMainEvent, filePath: string) => {
     });
 };
 
-const handleSetFacturisType = (_event: IpcMainEvent, facturisType: string) => {
+const handleSetFacturisType = async (_event: IpcMainInvokeEvent, facturisType: string): Promise<boolean> => {
     const store = new electronStore();
-    store.set("facturisType", facturisType);
+    try {
+        await store.set("facturisType", facturisType);
+        console.log("Facturis type set to:", facturisType);
+        return true;
+    } catch (error) {
+        console.error("Failed to set facturis type:", error);
+        return false;
+    }
 };
+
+// Register the handler
+ipcMain.handle(SET_FACTURIS_TYPE, handleSetFacturisType);
+
 
 const handleGetFacturisType = (_event: IpcMainInvokeEvent) => {
     try {
@@ -68,42 +79,69 @@ const handleGetFacturisType = (_event: IpcMainInvokeEvent) => {
     return ''
 };
 
-const handleOpenFileDialog = (_event: IpcMainEvent) => {
-    dialog.showOpenDialog({
-        properties: ['openFile', 'multiSelections'],
-        filters: [{ name: 'XML Files', extensions: ['xml'] }]
-    }).then(result => {
+const handleOpenFileDialog = async (_event: IpcMainEvent) => {
+    try {
+        const result = await dialog.showOpenDialog({
+            properties: ['openFile', 'multiSelections'],
+            filters: [{ name: 'XML Files', extensions: ['xml'] }]
+        });
+
         if (!result.canceled && result.filePaths.length > 0) {
             const store = new electronStore();
-            const facturisType = store.get("facturisType", "desktop");
+            const facturisType = store.get("facturisType", "facturis desktop");
 
-            result.filePaths.forEach(filePath => {
-                if (facturisType === "online") {
-                    processForFacturisOnline(filePath, (err: any, message: any) => {
-                        if (err) {
-                            console.error('Error processing file:', err);
-                            _event.reply('file-processing-error', err.message);
-                            return;
+            for (const filePath of result.filePaths) {
+                switch (facturisType) {
+                    case "facturis online":
+                        await processForFacturisOnline(filePath, (err: any, message: any) => {
+                            if (err) {
+                                console.error('Error processing file:', err);
+                                _event.reply('file-processing-error', err.message);
+                                return;
+                            }
+                            console.log(message);
+                            _event.reply('csv-written', message);
+                        });
+                        break;
+                    case "facturis desktop":
+                        await processForFacturisDesktop(filePath, (err: any, message: any) => {
+                            if (err) {
+                                console.error('Error processing file:', err);
+                                _event.reply('file-processing-error', err.message);
+                                return;
+                            }
+                            console.log(message);
+                            _event.reply('csv-written', message);
+                        });
+                        break;
+                    case "freya":
+                        try {
+                            console.log("Processing file for Freya NIR:", filePath);
+                            await processXmlForFreyaNir(filePath, (err: any, message: any) => {
+                                if (err) {
+                                    console.error('Error processing XML for Freya NIR:', err);
+                                    _event.reply('freya-processing-error', err.message);
+                                    return;
+                                }
+                                console.log("Freya processing completed:", message);
+                                _event.reply('freya-xml-saved', message);
+                            });
+                        } catch (error: any) {
+                            console.error('Caught error during Freya processing:', error);
+                            _event.reply('freya-processing-error', error.message);
                         }
-                        console.log(message);
-                        _event.reply('csv-written', message);
-                    });
-                } else {
-                    processForFacturisDesktop(filePath, (err: any, message: any) => {
-                        if (err) {
-                            console.error('Error processing file:', err);
-                            _event.reply('file-processing-error', err.message);
-                            return;
-                        }
-                        console.log(message);
-                        _event.reply('csv-written', message);
-                    });
+                        break;
+                    default:
+                        console.log('Unsupported facturis type:', facturisType);
+                        _event.reply('file-processing-error', 'Unsupported facturis type');
+                        break;
                 }
-            });
+            }
         }
-    }).catch(err => {
-        console.error(err);
-    });
+    } catch (err: any) {
+        console.error('Failed to open file dialog:', err);
+        _event.reply('file-processing-error', err.message);
+    }
 };
 
 
