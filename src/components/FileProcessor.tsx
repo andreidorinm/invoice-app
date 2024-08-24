@@ -3,6 +3,7 @@ import Toast from './Toast';
 import ToggleSwitch from './ToggleSwitch';
 import ExcelIcon from '../assets/excel.ico'
 import { useLicenseKey } from '../providers/LicenseKeyProvider';
+import FreyaTab from './FreyaTab';
 
 const FileProcessor = () => {
   const [markup, setMarkup] = useState('');
@@ -11,6 +12,7 @@ const FileProcessor = () => {
   const [facturisType, setFacturisType] = useState('desktop');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('default');
   const { expiryDate } = useLicenseKey();
 
   const calculateTimeLeft = () => {
@@ -160,6 +162,10 @@ const FileProcessor = () => {
     }
   };
 
+  const handleTabClick = (tabName: any) => {
+    setActiveTab(tabName);
+  };
+
   return (
     <div className="flex flex-col bg-gray-100 h-full mt-4 container-factura">
       {expiryDate && (
@@ -174,83 +180,87 @@ const FileProcessor = () => {
           <div className="flex gap-2">
             <img src={ExcelIcon} width={40} alt="ExcelIcon" />
             <h1 className="text-3xl font-bold">ClarFactura in NIR</h1>
+            <button className={`tab-button ${activeTab === 'default' ? 'active' : ''}`} onClick={() => handleTabClick('default')}>Default</button>
+            <button className={`tab-button ${activeTab === 'freya' ? 'active' : ''}`} onClick={() => handleTabClick('freya')}>Freya</button>
           </div>
         </div>
       </header>
       <div className="flex flex-grow overflow-hidden bg-black">
-        <main className="p-6 bg-white m-4 rounded-lg shadow-lg">
-          <div className="mt-4 w-80">
-            <h2 className="text-xl font-semibold text-black mb-4">📚 Ghid Rapid</h2>
-            <ol className="list-decimal list-inside space-y-2 text-black">
-              <li className="flex items-center">🔧 Setează Tipul Facturis (Desktop sau Online).</li>
-              <li className="flex items-center">💼 Pune un status plătitor sau neplătitor TVA</li>
-              <li className="flex items-center">💹 Ajustează Procentajul de Adaos Comercial în câmpul dedicat și confirmă prin ieșirea din câmp.</li>
-              <li className="flex items-center">📤 Încarcă fișierul XML pentru procesare apăsând pe butonul dedicat.</li>
-            </ol>
-          </div>
-        </main>
-        <main className="flex-grow p-6 bg-white m-4 rounded-lg shadow-lg">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold mb-2 text-black">Tipul de Facturis</h3>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleFacturisTypeChange('desktop')}
-                  className={`flex-1 button-facturis-type py-4 rounded-lg ${facturisType === 'desktop' ? 'bg-blue-500 text-white' : 'bg-gray-200'} transition duration-150 ease-in-out`}
-                >
-                  Desktop
-                </button>
-                <button
-                  onClick={() => handleFacturisTypeChange('online')}
-                  className={`flex-1 button-facturis-type py-4 rounded-lg ${facturisType === 'online' ? 'bg-blue-500 text-white' : 'bg-gray-200'} transition duration-150 ease-in-out`}
-                >
-                  Online
-                </button>
+        {activeTab === 'default' && (
+          <>
+            <main className="p-6 bg-white m-4 rounded-lg shadow-lg">
+              <div className="mt-4 w-80">
+                <h2 className="text-xl font-semibold text-black mb-4">📚 Ghid Rapid</h2>
+                <ol className="list-decimal list-inside space-y-2 text-black">
+                  <li className="flex items-center">🔧 Setează Tipul Facturis (Desktop sau Online).</li>
+                  <li className="flex items-center">💼 Pune un status plătitor sau neplătitor TVA</li>
+                  <li className="flex items-center">💹 Ajustează Procentajul de Adaos Comercial în câmpul dedicat și confirmă prin ieșirea din câmp.</li>
+                  <li className="flex items-center">📤 Încarcă fișierul XML pentru procesare apăsând pe butonul dedicat.</li>
+                </ol>
               </div>
-            </div>
-            <div className="flex items-center justify-center">
-              <ToggleSwitch isOn={isVatPayer} handleToggle={handleToggleVatPayerStatus} />
-              <span className={`ml-3 text-base font-medium ${isVatPayer ? 'text-green-700' : 'text-gray-600'}`}>
-                {isVatPayer ? 'Plătitor de TVA' : 'Neplătitor de TVA'}
-              </span>
-            </div>
-            <div>
-              <label htmlFor="markup" className="block mb-2 text-gray-700">Adaos Comercial</label>
-              <div className="flex justify-center items-center py-2">
-                <button
-                  onClick={decreaseMarkup}
-                  className="px-3 py-2 bg-gray-200 text-black rounded-l-lg hover:bg-blue-500 focus:outline-none transition duration-150 ease-in-out"
-                >
-                  -
-                </button>
-                <input
-                  id="markup"
-                  type="text"
-                  className="form-input text-center block w-32 py-2 mr-2 ml-2 border-t rounded border-b border-gray-300 transition duration-150 ease-in-out"
-                  value={markup}
-                  onChange={handleMarkupChange}
-                  onBlur={handleBlurMarkup}
-                  placeholder="0"
-                  disabled={loading}
-                />
-                <button
-                  onClick={increaseMarkup}
-                  className="px-3 py-2 bg-gray-200 text-black rounded-r-lg hover:bg-blue-500 focus:outline-none transition duration-150 ease-in-out"
-                >
-                  +
-                </button>
+            </main><main className="flex-grow p-6 bg-white m-4 rounded-lg shadow-lg">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-2 text-black">Tipul de Facturis</h3>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleFacturisTypeChange('desktop')}
+                      className={`flex-1 button-facturis-type py-4 rounded-lg ${facturisType === 'desktop' ? 'bg-blue-500 text-white' : 'bg-gray-200'} transition duration-150 ease-in-out`}
+                    >
+                      Desktop
+                    </button>
+                    <button
+                      onClick={() => handleFacturisTypeChange('online')}
+                      className={`flex-1 button-facturis-type py-4 rounded-lg ${facturisType === 'online' ? 'bg-blue-500 text-white' : 'bg-gray-200'} transition duration-150 ease-in-out`}
+                    >
+                      Online
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center">
+                  <ToggleSwitch isOn={isVatPayer} handleToggle={handleToggleVatPayerStatus} />
+                  <span className={`ml-3 text-base font-medium ${isVatPayer ? 'text-green-700' : 'text-gray-600'}`}>
+                    {isVatPayer ? 'Plătitor de TVA' : 'Neplătitor de TVA'}
+                  </span>
+                </div>
+                <div>
+                  <label htmlFor="markup" className="block mb-2 text-gray-700">Adaos Comercial</label>
+                  <div className="flex justify-center items-center py-2">
+                    <button
+                      onClick={decreaseMarkup}
+                      className="px-3 py-2 bg-gray-200 text-black rounded-l-lg hover:bg-blue-500 focus:outline-none transition duration-150 ease-in-out"
+                    >
+                      -
+                    </button>
+                    <input
+                      id="markup"
+                      type="text"
+                      className="form-input text-center block w-32 py-2 mr-2 ml-2 border-t rounded border-b border-gray-300 transition duration-150 ease-in-out"
+                      value={markup}
+                      onChange={handleMarkupChange}
+                      onBlur={handleBlurMarkup}
+                      placeholder="0"
+                      disabled={loading} />
+                    <button
+                      onClick={increaseMarkup}
+                      className="px-3 py-2 bg-gray-200 text-black rounded-r-lg hover:bg-blue-500 focus:outline-none transition duration-150 ease-in-out"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-center py-2">
+                  <button
+                    onClick={openDialog}
+                    className="px-10 py-4 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none transition duration-150 ease-in-out"
+                  >
+                    Selectează fișierul XML ANAF
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="flex justify-center py-2">
-              <button
-                onClick={openDialog}
-                className="px-10 py-4 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none transition duration-150 ease-in-out"
-              >
-                Selectează fișierul XML ANAF
-              </button>
-            </div>
-          </div>
-        </main>
+            </main></>
+        )}
+        {activeTab === 'freya' && <FreyaTab />}
       </div>
     </div>
   );

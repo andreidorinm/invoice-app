@@ -3,6 +3,7 @@ import { IPC_ACTIONS } from "./IPCActions";
 import electronStore from 'electron-store';
 import { processForFacturisOnline } from "../controllers/onlineController";
 import { processForFacturisDesktop } from "../controllers/desktopController";
+import { processXmlForFreyaNir } from "../controllers/freyaController";
 const { v4: uuidv4 } = require('uuid');
 
 const {
@@ -16,7 +17,8 @@ const {
     OPEN_FILE_DIALOG,
     SET_FACTURIS_TYPE,
     GET_FACTURIS_TYPE,
-    GET_DEVICE_ID
+    GET_DEVICE_ID,
+    PROCESS_XML_FOR_FREYA
 } = IPC_ACTIONS.Window;
 
 const handleSetLicenseKey = (_event: IpcMainEvent, key: string) => {
@@ -38,6 +40,18 @@ const handleGetLicenseKey = (_event: IpcMainInvokeEvent, _key: string): string |
     }
     return ''
 }
+
+const handleProcessXmlForFreya = (_event: IpcMainEvent, filePath: string) => {
+    processXmlForFreyaNir(filePath, (err: any, message: any) => {
+        if (err) {
+            console.error('Error processing XML for Freya NIR:', err);
+            _event.reply('freya-processing-error', err.message);
+            return;
+        }
+        console.log(message);
+        _event.reply('freya-xml-saved', message);
+    });
+};
 
 const handleSetFacturisType = (_event: IpcMainEvent, facturisType: string) => {
     const store = new electronStore();
@@ -157,6 +171,8 @@ export const registerIPCHandlers = () => {
 
     ipcMain.on(SET_FACTURIS_TYPE, handleSetFacturisType);
     ipcMain.handle(GET_FACTURIS_TYPE, handleGetFacturisType);
+
+    ipcMain.on(PROCESS_XML_FOR_FREYA, handleProcessXmlForFreya);
 
     ipcMain.handle(GET_DEVICE_ID, handleGetDeviceId);
 }
