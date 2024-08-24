@@ -1,7 +1,8 @@
 import { IpcMainEvent, IpcMainInvokeEvent, ipcMain, dialog } from "electron";
 import { IPC_ACTIONS } from "./IPCActions";
 import electronStore from 'electron-store';
-import { processForFacturisDesktop, processForFacturisOnline } from '../utils/fileProcessor'
+import { processForFacturisOnline } from "../controllers/onlineController";
+import { processForFacturisDesktop } from "../controllers/desktopController";
 const { v4: uuidv4 } = require('uuid');
 
 const {
@@ -64,7 +65,7 @@ const handleOpenFileDialog = (_event: IpcMainEvent) => {
 
             result.filePaths.forEach(filePath => {
                 if (facturisType === "online") {
-                    processForFacturisOnline(filePath, (err, message) => {
+                    processForFacturisOnline(filePath, (err: any, message: any) => {
                         if (err) {
                             console.error('Error processing file:', err);
                             _event.reply('file-processing-error', err.message);
@@ -74,7 +75,7 @@ const handleOpenFileDialog = (_event: IpcMainEvent) => {
                         _event.reply('csv-written', message);
                     });
                 } else {
-                    processForFacturisDesktop(filePath, (err, message) => {
+                    processForFacturisDesktop(filePath, (err: any, message: any) => {
                         if (err) {
                             console.error('Error processing file:', err);
                             _event.reply('file-processing-error', err.message);
