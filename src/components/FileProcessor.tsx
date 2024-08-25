@@ -4,6 +4,8 @@ import ToggleSwitch from './ToggleSwitch';
 import ExcelIcon from '../assets/excel.ico'
 import { useLicenseKey } from '../providers/LicenseKeyProvider';
 import FreyaTab from './FreyaTab';
+import OblioTab from './OblioTab';
+import SmartbillTab from './SmarbillTab';
 
 const FileProcessor = () => {
   const [markup, setMarkup] = useState('');
@@ -102,11 +104,13 @@ const FileProcessor = () => {
 
   useEffect(() => {
     const handleFileProcessed = (message: any) => {
+      console.log("File processed:", message);  // Debug log
       setShowToast(true);
       setToastMessage(message);
     };
 
     const handleError = (error: any) => {
+    console.log("Processing error:", error);  // Debug log
       setShowToast(true);
       setToastMessage(error);
     };
@@ -166,6 +170,10 @@ const FileProcessor = () => {
     setActiveTab(tabName);
     if (tabName === 'freya') {
       handleFacturisTypeChange('freya');
+    } else if (tabName === 'oblio') {
+      handleFacturisTypeChange('oblio');
+    } else if (tabName === 'smartbill') {
+      handleFacturisTypeChange('smartbill');
     }
   };
 
@@ -199,6 +207,18 @@ const FileProcessor = () => {
                 onClick={() => handleTabClick('freya')}
               >
                 Freya
+              </button>
+              <button
+                className={`px-4 py-2 rounded transition-all duration-300 shadow-sm ${activeTab === 'oblio' ? 'bg-green-600 text-white' : 'bg-gray-200 text-black hover:bg-green-500 hover:text-white'}`}
+                onClick={() => handleTabClick('oblio')}
+              >
+                Oblio
+              </button>
+              <button
+                className={`px-4 py-2 rounded transition-all duration-300 shadow-sm ${activeTab === 'smartbill' ? 'bg-green-600 text-white' : 'bg-gray-200 text-black hover:bg-green-500 hover:text-white'}`}
+                onClick={() => handleTabClick('smartbill')}
+              >
+                Smartbill
               </button>
             </div>
           </div>
@@ -280,6 +300,8 @@ const FileProcessor = () => {
             </main></>
         )}
         {activeTab === 'freya' && <FreyaTab />}
+        {activeTab === 'oblio' && <OblioTab />}
+        {activeTab === 'smartbill' && <SmartbillTab />}
       </div>
     </div>
   );

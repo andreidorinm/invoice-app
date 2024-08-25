@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Toast from './Toast';
 import ToggleSwitch from './ToggleSwitch';
 
-const FreyaTab = () => {
+const SmartbillTab = () => {
   const [markup, setMarkup] = useState('');
   const [isVatPayer, setIsVatPayer] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -31,11 +31,11 @@ const FreyaTab = () => {
       setToastMessage(error);
     };
 
-    window.api.receiveMessage('freya-xml-saved', handleFileProcessed);
+    window.api.receiveMessage('smartbill-xml-saved', handleFileProcessed);
     window.api.receiveMessage('file-processing-error', handleError);
 
     return () => {
-      window.api.removeListener('freya-xml-saved', handleFileProcessed);
+      window.api.removeListener('smartbill-xml-saved', handleFileProcessed);
       window.api.removeListener('file-processing-error', handleError);
     };
   }, []);
@@ -111,14 +111,14 @@ const FreyaTab = () => {
     }
   };
 
-const openDialogForFreya = () => {
-  window.api.setFacturisType('freya').then(() => {
-    console.log("Facturis type set successfully, opening file dialog...");
-    window.api.openFileDialog(); 
-  }).catch(error => {
-    console.error('Error setting Facturis type:', error);
-  });
-};
+  const openDialogForSmartbill = () => {
+    window.api.setFacturisType('smartbill').then(() => {
+      console.log("Factura type set successfully, opening file dialog...");
+      window.api.openFileDialog();
+    }).catch(error => {
+      console.error('Error setting Facturis type:', error);
+    });
+  };
 
   return (
     <div className="flex flex-col bg-gray-100 h-full mt-4 container-factura">
@@ -137,7 +137,7 @@ const openDialogForFreya = () => {
         <main className="flex-grow p-6 bg-white m-4 rounded-lg shadow-lg">
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold mb-2 text-black">Creeaza NIR Freya</h3>
+              <h3 className="text-xl font-semibold mb-2 text-black">Creeaza NIR Smartbill</h3>
 
             </div>
             <div className="flex items-center justify-center">
@@ -176,7 +176,7 @@ const openDialogForFreya = () => {
             </div>
             <div className="flex justify-center py-2">
               <button
-                onClick={openDialogForFreya}
+                onClick={openDialogForSmartbill}
                 className="px-10 py-4 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none transition duration-150 ease-in-out"
               >
                 Selectează fișierul XML ANAF
@@ -189,4 +189,4 @@ const openDialogForFreya = () => {
   );
 };
 
-export default FreyaTab;
+export default SmartbillTab;

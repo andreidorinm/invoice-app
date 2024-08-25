@@ -4,6 +4,8 @@ import electronStore from 'electron-store';
 import { processForFacturisOnline } from "../controllers/onlineController";
 import { processForFacturisDesktop } from "../controllers/desktopController";
 import { processXmlForFreyaNir } from "../controllers/freyaController";
+import { processXmlForOblio } from "../controllers/oblioController";
+import { processXmlForSmartBill } from "../controllers/smartbillController";
 const { v4: uuidv4 } = require('uuid');
 
 const {
@@ -18,7 +20,9 @@ const {
     SET_FACTURIS_TYPE,
     GET_FACTURIS_TYPE,
     GET_DEVICE_ID,
-    PROCESS_XML_FOR_FREYA
+    PROCESS_XML_FOR_FREYA,
+    PROCESS_XML_FOR_OBLIO,
+    PROCESS_XML_FOR_SMARTBILL
 } = IPC_ACTIONS.Window;
 
 const handleSetLicenseKey = (_event: IpcMainEvent, key: string) => {
@@ -53,6 +57,30 @@ const handleProcessXmlForFreya = (_event: IpcMainEvent, filePath: string) => {
     });
 };
 
+const handleProcessXmlForOblio = (_event: IpcMainEvent, filePath: string) => {
+    processXmlForOblio(filePath, (err: any, message: any) => {
+        if (err) {
+            console.error('Error processing XML for Oblio NIR:', err);
+            _event.reply('oblio-processing-error', err.message);
+            return;
+        }
+        console.log(message);
+        _event.reply('oblio-xml-saved', message);
+    });
+};
+
+const handleProcessXmlForSmartbill = (_event: IpcMainEvent, filePath: string) => {
+    processXmlForSmartBill(filePath, (err: any, message: any) => {
+        if (err) {
+            console.error('Error processing XML for Smartbill NIR:', err);
+            _event.reply('smartbill-processing-error', err.message);
+            return;
+        }
+        console.log(message);
+        _event.reply('smartbill-xml-saved', message);
+    });
+};
+
 const handleSetFacturisType = async (_event: IpcMainInvokeEvent, facturisType: string): Promise<boolean> => {
     const store = new electronStore();
     try {
@@ -65,7 +93,6 @@ const handleSetFacturisType = async (_event: IpcMainInvokeEvent, facturisType: s
     }
 };
 
-// Register the handler
 ipcMain.handle(SET_FACTURIS_TYPE, handleSetFacturisType);
 
 
@@ -131,6 +158,40 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
                             _event.reply('freya-processing-error', error.message);
                         }
                         break;
+                    case "oblio":
+                        try {
+                            console.log("Processing file for Oblio NIR:", filePath);
+                            await processXmlForOblio(filePath, (err: any, message: any) => {
+                                if (err) {
+                                    console.error('Error processing XML for Oblio NIR:', err);
+                                    _event.reply('oblio-processing-error', err.message);
+                                    return;
+                                }
+                                console.log("Oblio processing completed:", message);
+                                _event.reply('oblio-xml-saved', message);
+                            });
+                        } catch (error: any) {
+                            console.error('Caught error during Oblio processing:', error);
+                            _event.reply('oblio-processing-error', error.message);
+                        }
+                        break;
+                        case "smartbill":
+                            try {
+                                console.log("Processing file for Smartbill NIR:", filePath);
+                                await processXmlForSmartBill(filePath, (err: any, message: any) => {
+                                    if (err) {
+                                        console.error('Error processing XML for Smartbill NIR:', err);
+                                        _event.reply('smartbill-processing-error', err.message);
+                                        return;
+                                    }
+                                    console.log("Smartbill processing completed:", message);
+                                    _event.reply('smartbill-xml-saved', message);
+                                });
+                            } catch (error: any) {
+                                console.error('Caught error during Smartbill processing:', error);
+                                _event.reply('smartbill-processing-error', error.message);
+                            }
+                            break;
                     default:
                         console.log('Unsupported facturis type:', facturisType);
                         _event.reply('file-processing-error', 'Unsupported facturis type');
@@ -211,6 +272,10 @@ export const registerIPCHandlers = () => {
     ipcMain.handle(GET_FACTURIS_TYPE, handleGetFacturisType);
 
     ipcMain.on(PROCESS_XML_FOR_FREYA, handleProcessXmlForFreya);
+
+    ipcMain.on(PROCESS_XML_FOR_OBLIO, handleProcessXmlForOblio);
+
+    ipcMain.on(PROCESS_XML_FOR_SMARTBILL, handleProcessXmlForSmartbill);
 
     ipcMain.handle(GET_DEVICE_ID, handleGetDeviceId);
 }

@@ -22,13 +22,12 @@ async function processXmlForFreyaNir(filePath: string, callback: (error: Error |
       throw new Error('No directory selected');
     }
 
-    const outputDir = path.join(filePaths[0], `NIR_${new Date().toISOString().replace(/:/g, '-')}.xlsx`);
-    console.log("Saving NIR file to:", outputDir);
+    const outputDir = path.join(filePaths[0], `FREYA_NIR_${new Date().toISOString().replace(/:/g, '-')}.xlsx`);
+    console.log("Salvarea fișierului la:", outputDir);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('NIR');
 
-    // Define headers based on your data structure
     worksheet.columns = [
       { header: 'Document Series', key: 'DocumentSeries', width: 18 },
       { header: 'Document No', key: 'DocumentNo', width: 18 },
@@ -44,7 +43,6 @@ async function processXmlForFreyaNir(filePath: string, callback: (error: Error |
       { header: 'Measure Unit', key: 'MeasureUnit', width: 15 }
     ];
 
-    // Adding data rows dynamically for each product
     dataForXLS.NIR.Products.forEach((product: any) => {
       worksheet.addRow({
         DocumentSeries: dataForXLS.NIR.DocumentSeries,
@@ -66,7 +64,7 @@ async function processXmlForFreyaNir(filePath: string, callback: (error: Error |
     await workbook.xlsx.writeFile(outputDir);
 
     console.log("NIR XLS saved successfully at", outputDir);
-    callback(null, `NIR XLS saved successfully at ${outputDir}`);
+    callback(null, `Fisier salvat cu succes la: ${outputDir}`);
   } catch (error: any) {
     console.error('Error processing XML for Freya NIR:', error);
     callback(error);

@@ -146,7 +146,7 @@ const safeExposeIpcRenderer = () => ({
   processFile: (filePath: any) => ipcRenderer.send('process-file', filePath),
   processXmlForFreya: (filePath: string) => ipcRenderer.send('process-xml-for-freya', filePath),
   receiveMessage: (channel: any, func: any) => {
-    const validChannels = ['csv-written', 'file-processing-error', 'license-key-updated',  'freya-processing-error'];
+    const validChannels = ['csv-written', 'oblio-xml-saved', 'smartbill-xml-saved', 'freya-xml-saved', 'file-processing-error', 'license-key-updated', 'freya-processing-error', 'oblio-processing-error', 'smartbill-processing-error'];
     if (validChannels.includes(channel)) {
       const subscription = (_event: any, ...args: any) => func(...args);
       ipcRenderer.on(channel, subscription);
