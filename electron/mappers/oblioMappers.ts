@@ -5,7 +5,7 @@ export async function mapXmlToOblioXml(xmlData: any) {
   try {
     const result = await parseStringPromise(xmlData);
     const invoice = result.Invoice;
-    const markupPercentage: any = store.get('markupPercentage', 0);
+    // const markupPercentage: any = store.get('markupPercentage', 0);
     const isVatPayer = store.get('isVatPayer', false);
 
     if (!invoice || !invoice['cac:InvoiceLine']) {
@@ -18,10 +18,10 @@ export async function mapXmlToOblioXml(xmlData: any) {
           const basePrice = line['cac:Price'] && line['cac:Price'][0]['cbc:PriceAmount'] ? parseFloat(line['cac:Price'][0]['cbc:PriceAmount'][0]['_']) : 0;
           const vatRate = line['cac:Item'] && line['cac:Item'][0]['cac:ClassifiedTaxCategory'] ? parseFloat(line['cac:Item'][0]['cac:ClassifiedTaxCategory'][0]['cbc:Percent'][0]) : 0;
           const priceWithoutVat = basePrice;
-          const priceWithVat = basePrice * (1 + vatRate / 100);
+          // const priceWithVat = basePrice * (1 + vatRate / 100);
 
-          let sellingPriceWithoutVat = priceWithoutVat * (1 + markupPercentage / 100);
-          let sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate / 100);
+          // let sellingPriceWithoutVat = priceWithoutVat * (1 + markupPercentage / 100);
+          // let sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate / 100);
 
           return {
             'Denumire produs': line['cac:Item'] ? line['cac:Item'][0]['cbc:Name'][0] : 'Unknown Product',
