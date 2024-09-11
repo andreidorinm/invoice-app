@@ -8,9 +8,12 @@ async function processXmlForFreyaNir(filePath: string, callback: (error: Error |
   try {
     console.log("Reading XML file:", filePath);
     const xmlData = fs.readFileSync(filePath, 'utf8');
-    
+
     console.log("Mapping XML data to NIR structure...");
     const dataForXLS = await mapXmlToNirFreyaXml(xmlData);
+
+    const invoiceDate = new Date(dataForXLS.NIR.DocumentDate).toISOString().split('T')[0];
+    const supplierName = dataForXLS.NIR.Supplier.replace(/\s+/g, '_');
 
     console.log("Prompting user to select a directory for saving the NIR file...");
     const { filePaths } = await dialog.showOpenDialog({
@@ -22,7 +25,8 @@ async function processXmlForFreyaNir(filePath: string, callback: (error: Error |
       throw new Error('No directory selected');
     }
 
-    const outputDir = path.join(filePaths[0], `FREYA_NIR_${new Date().toISOString().replace(/:/g, '-')}.xlsx`);
+    const formattedFileName = `FREYA_NIR_${invoiceDate}_${supplierName}.xlsx`;
+    const outputDir = path.join(filePaths[0], formattedFileName);
     console.log("Saving file at:", outputDir);
 
     const workbook = new ExcelJS.Workbook();
@@ -33,7 +37,7 @@ async function processXmlForFreyaNir(filePath: string, callback: (error: Error |
     worksheet.addRow(['DocumentDate', dataForXLS.NIR.DocumentDate]);
     worksheet.addRow(['DeadlineDate', dataForXLS.NIR.DeadlineDate]);
     worksheet.addRow(['Supplier', dataForXLS.NIR.Supplier]);
-    worksheet.addRow(['SupplierUniqueCode', '']); 
+    worksheet.addRow(['SupplierUniqueCode', '']);
     worksheet.addRow(['FinancialAdministration', dataForXLS.NIR.FinancialAdministration]);
     worksheet.addRow(['FinancialAdministrationCode', '']);
     worksheet.addRow([]);
