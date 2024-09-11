@@ -3,19 +3,19 @@ import Toast from './Toast';
 import ToggleSwitch from './ToggleSwitch';
 
 const FreyaTab = () => {
-  const [markup, setMarkup] = useState('');
+  // const [markup, setMarkup] = useState('');
   const [isVatPayer, setIsVatPayer] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     const initialize = async () => {
-      const storedMarkup = await window.api.getMarkupPercentage();
+      // const storedMarkup = await window.api.getMarkupPercentage();
       const vatPayerStatus = await window.api.getVatPayerStatus();
       setIsVatPayer(vatPayerStatus);
-      setMarkup(storedMarkup.toString());
-      setLoading(false);
+      // setMarkup(storedMarkup.toString());
+      // setLoading(false);
     };
     initialize();
   }, []);
@@ -40,64 +40,64 @@ const FreyaTab = () => {
     };
   }, []);
 
-  const handleMarkupChange = (e: any) => {
-    const value = e.target.value;
-    const formattedValue = value.replace(/^0+/, '') || '0';
-    setMarkup(formattedValue);
-  };
+  // const handleMarkupChange = (e: any) => {
+  //   const value = e.target.value;
+  //   const formattedValue = value.replace(/^0+/, '') || '0';
+  //   setMarkup(formattedValue);
+  // };
 
-  const handleBlurMarkup = async () => {
-    if (markup.trim() === '') {
-      setMarkup('0');
-    }
-    try {
-      await window.api.setMarkupPercentage(Number(markup));
-      setShowToast(true);
-      setToastMessage(`Markup percentage set to: ${markup}%`);
-    } catch (error) {
-      console.error("Failed to set markup percentage:", error);
-      setShowToast(true);
-      setToastMessage("Error setting markup percentage.");
-    }
-  };
+  // const handleBlurMarkup = async () => {
+  //   if (markup.trim() === '') {
+  //     setMarkup('0');
+  //   }
+  //   try {
+  //     await window.api.setMarkupPercentage(Number(markup));
+  //     setShowToast(true);
+  //     setToastMessage(`Markup percentage set to: ${markup}%`);
+  //   } catch (error) {
+  //     console.error("Failed to set markup percentage:", error);
+  //     setShowToast(true);
+  //     setToastMessage("Error setting markup percentage.");
+  //   }
+  // };
 
-  const increaseMarkup = async () => {
-    setMarkup((prevMarkup) => {
-      const newMarkup = parseFloat(prevMarkup) + 1;
-      return newMarkup.toString();
-    });
+  // const increaseMarkup = async () => {
+  //   setMarkup((prevMarkup) => {
+  //     const newMarkup = parseFloat(prevMarkup) + 1;
+  //     return newMarkup.toString();
+  //   });
 
-    await new Promise(resolve => setTimeout(resolve, 0));
+  //   await new Promise(resolve => setTimeout(resolve, 0));
 
-    try {
-      await window.api.setMarkupPercentage(Number(markup) + 1);
-      setToastMessage(`Procentul de adaos comercial a fost setat la: ${Number(markup) + 1}%`);
-      setShowToast(true);
-    } catch (error) {
-      console.error("Nu am reușit să setăm procentul de adaos comercial:", error);
-      setToastMessage("Eroare la setarea procentului de adaos comercial.");
-      setShowToast(true);
-    }
-  };
+  //   try {
+  //     await window.api.setMarkupPercentage(Number(markup) + 1);
+  //     setToastMessage(`Procentul de adaos comercial a fost setat la: ${Number(markup) + 1}%`);
+  //     setShowToast(true);
+  //   } catch (error) {
+  //     console.error("Nu am reușit să setăm procentul de adaos comercial:", error);
+  //     setToastMessage("Eroare la setarea procentului de adaos comercial.");
+  //     setShowToast(true);
+  //   }
+  // };
 
-  const decreaseMarkup = async () => {
-    setMarkup((prevMarkup) => {
-      const newMarkup = Math.max(0, parseFloat(prevMarkup) - 1);
-      return newMarkup.toString();
-    });
+  // const decreaseMarkup = async () => {
+  //   setMarkup((prevMarkup) => {
+  //     const newMarkup = Math.max(0, parseFloat(prevMarkup) - 1);
+  //     return newMarkup.toString();
+  //   });
 
-    await new Promise(resolve => setTimeout(resolve, 0));
+  //   await new Promise(resolve => setTimeout(resolve, 0));
 
-    try {
-      await window.api.setMarkupPercentage(Math.max(0, Number(markup) - 1));
-      setToastMessage(`Procentul de adaos comercial a fost setat la: ${Math.max(0, Number(markup) - 1)}%`);
-      setShowToast(true);
-    } catch (error) {
-      console.error("Nu am reușit să setăm procentul de adaos comercial:", error);
-      setToastMessage("Eroare la setarea procentului de adaos comercial.");
-      setShowToast(true);
-    }
-  };
+  //   try {
+  //     await window.api.setMarkupPercentage(Math.max(0, Number(markup) - 1));
+  //     setToastMessage(`Procentul de adaos comercial a fost setat la: ${Math.max(0, Number(markup) - 1)}%`);
+  //     setShowToast(true);
+  //   } catch (error) {
+  //     console.error("Nu am reușit să setăm procentul de adaos comercial:", error);
+  //     setToastMessage("Eroare la setarea procentului de adaos comercial.");
+  //     setShowToast(true);
+  //   }
+  // };
 
   const handleToggleVatPayerStatus = async () => {
     const newStatus = !isVatPayer;
@@ -147,7 +147,7 @@ const openDialogForFreya = () => {
               </span>
             </div>
             <div>
-              <div>
+              {/* <div>
                 <label htmlFor="markup" className="block mb-2 text-gray-700">Adaos Comercial</label>
                 <div className="flex justify-center items-center py-2">
                   <button
@@ -172,7 +172,7 @@ const openDialogForFreya = () => {
                     +
                   </button>
                 </div>
-              </div>
+              </div> */}
             </div>
             <div className="flex justify-center py-2">
               <button

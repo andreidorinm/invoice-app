@@ -211,7 +211,7 @@ const FileProcessor = () => {
           </div>
 
           <div className="flex-1 flex flex-col items-center">
-            <p className="text-sm font-medium">Te rog alege tipul de factura:</p>
+            <p className="text-sm font-medium">Te rog alege tipul de program:</p>
             <div className="flex space-x-2 mt-2">
               <button
                 className={`px-4 py-2 rounded transition-all duration-300 shadow-sm ${activeTab === 'facturis' ? 'bg-green-600 text-white' : 'bg-gray-200 text-black hover:bg-green-500 hover:text-white'}`}
