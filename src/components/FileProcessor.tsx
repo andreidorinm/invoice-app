@@ -43,14 +43,31 @@ const FileProcessor = () => {
     const initialize = async () => {
       const storedMarkup = await window.api.getMarkupPercentage();
       const vatPayerStatus = await window.api.getVatPayerStatus();
-      const facturisType = await window.api.getFacturisType();
-      setFacturisType(facturisType);
+      const loadedFacturisType = await window.api.getFacturisType();
+  
+      setFacturisType(loadedFacturisType);
       setIsVatPayer(vatPayerStatus);
       setMarkup(storedMarkup.toString());
       setLoading(false);
+  
+      switch (loadedFacturisType) {
+        case 'freya':
+          setActiveTab('freya');
+          break;
+        case 'oblio':
+          setActiveTab('oblio');
+          break;
+        case 'smartbill':
+          setActiveTab('smartbill');
+          break;
+        default:
+          setActiveTab('facturis');
+          break;
+      }
     };
     initialize();
   }, []);
+  
 
   const handleBlurMarkup = async () => {
     if (markup.trim() === '') {

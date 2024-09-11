@@ -48,7 +48,7 @@ const FreyaTab = () => {
 
   const handleBlurMarkup = async () => {
     if (markup.trim() === '') {
-      setMarkup('0'); // Reset to 0 if empty
+      setMarkup('0');
     }
     try {
       await window.api.setMarkupPercentage(Number(markup));
