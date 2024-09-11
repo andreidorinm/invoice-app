@@ -1,49 +1,48 @@
+import moment from 'moment';
+import xml2js from 'xml2js';
 import { parseStringPromise } from 'xml2js';
-import store from '../config/electronStore';
 
 export async function mapXmlToNirFreyaXml(xmlData: any) {
-  const result = await parseStringPromise(xmlData);
-  const invoice = result.Invoice;
-  const markupPercentage: any = store.get('markupPercentage', 0);
-  const isVatPayer = store.get('isVatPayer', false);
+  const options = {
+    explicitArray: false,
+    ignoreAttrs: false,
+    tagNameProcessors: [xml2js.processors.stripPrefix]
+  };
 
-  // This now returns a JavaScript object
+  const result = await parseStringPromise(xmlData, options);
+  const invoice = result.Invoice;
+
+  const documentDate = invoice.IssueDate ? moment(invoice.IssueDate).format('M/D/YYYY') : 'N/A';
+  const currentTime = moment().format('HH:mm');
+  const formattedDocumentDate = `${documentDate} ${currentTime}`;
+
+  const products = (Array.isArray(invoice.InvoiceLine) ? invoice.InvoiceLine : [invoice.InvoiceLine]).map((line: any) => {
+    const priceAmount = parseFloat(line.Price.PriceAmount._);
+    const units = parseFloat(line.InvoicedQuantity._);
+    const vatRate = parseFloat(line.Item.ClassifiedTaxCategory.Percent) / 100;
+
+    let measureUnit = line.InvoicedQuantity.$.unitCode;
+    measureUnit = measureUnit === 'H87' ? 'buc' : (measureUnit === 'KGM' ? 'kilogram' : measureUnit);
+    return {
+      ProductName: line.Item.Name,
+      ProductCode: '',
+      Units: units,
+      UnitPriceWithoutVat: priceAmount.toFixed(2),
+      Discount: '0',
+      VatRate: vatRate,
+      MeasureUnit: measureUnit
+    };
+  });
+
   return {
     NIR: {
-      DocumentSeries: invoice['cbc:ID'][0],
-      DocumentNo: invoice['cbc:ID'][0],
-      DocumentDate: invoice['cbc:IssueDate'][0],
-      DeadlineDate: invoice['cbc:IssueDate'][0],
-      Supplier: invoice['cac:AccountingSupplierParty'][0]['cac:Party'][0]['cac:PartyName'][0]['cbc:Name'][0],
+      DocumentSeries: invoice.ID,
+      DocumentNo: invoice.ID,
+      DocumentDate: formattedDocumentDate,
+      DeadlineDate: formattedDocumentDate,
+      Supplier: invoice.AccountingSupplierParty.Party.PartyName.Name,
       FinancialAdministration: "Gestiune materii prime",
-      Products: invoice['cac:InvoiceLine'].map((line: any) => {
-        const basePrice = parseFloat(line['cac:Price'][0]['cbc:PriceAmount'][0]['_']);
-        const vatRate = parseFloat(line['cac:Item'][0]['cac:ClassifiedTaxCategory'][0]['cbc:Percent'][0]) / 100;
-        const priceWithoutVat = parseFloat(basePrice.toFixed(2));
-        const priceWithVat = basePrice * (1 + vatRate);
-
-        let sellingPriceWithoutVat, sellingPriceWithVat, outputVatRate;
-        if (isVatPayer) {
-          sellingPriceWithoutVat = priceWithoutVat * (1 + markupPercentage / 100);
-          sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
-          outputVatRate = (vatRate * 100).toFixed(0) + '%';
-        } else {
-          sellingPriceWithVat = priceWithVat * (1 + markupPercentage / 100);
-          sellingPriceWithoutVat = sellingPriceWithVat;
-          outputVatRate = 'Neplatitor de TVA';
-        }
-
-        return {
-          ProductName: line['cac:Item'][0]['cbc:Name'][0],
-          ProductCode: '',
-          Units: line['cbc:InvoicedQuantity'][0]['_'],
-          UnitPriceWithoutVat: sellingPriceWithoutVat.toFixed(2),
-          Discount: '0.00',
-          VatRate: outputVatRate,
-          MeasureUnit: line['cbc:InvoicedQuantity'][0]['$']['unitCode']
-        };
-      })
+      Products: products
     }
   };
 }
-

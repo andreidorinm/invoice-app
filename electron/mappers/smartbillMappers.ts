@@ -12,7 +12,6 @@ export async function mapXmlToSmartBillNir(xmlData: any) {
       throw new Error("Invalid XML structure: Invoice details are missing.");
     }
 
-    // Fix potential issue with namespace handling
     const invoiceLines = invoice['cac:InvoiceLine'] || [];
 
     return {
@@ -33,17 +32,20 @@ export async function mapXmlToSmartBillNir(xmlData: any) {
           let sellingPriceWithoutVat = basePrice * (1 + markupPercentage / 100);
           const sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate / 100);
 
+          let measureUnit = line['cbc:InvoicedQuantity'][0]['$']['unitCode'];
+          measureUnit = measureUnit === 'H87' ? 'BUC' : (measureUnit === 'KGM' ? 'Kg' : measureUnit);
+
           return {
             'Denumire produs': item['cbc:Name'][0],
             'Cod produs': item['cac:SellersItemIdentification']?.['cbc:ID'][0] || 'N/A',
             'Pret': isVatPayer ? sellingPriceWithVat.toFixed(2) : sellingPriceWithoutVat.toFixed(2),
             'Pretul contine TVA': isVatPayer ? 'Da' : 'Nu',
-            'Unitate masura': quantityDetails['$'].unitCode || 'N/A',
+            'Unitate masura': measureUnit,
             'Moneda': 'RON',
             'Cota TVA': vatRate.toFixed(0),
             'Tip': 'produs'
           };
-        }).filter((product: any) => product !== null) // Filter out null entries
+        }).filter((product: any) => product !== null)
       }
     };
   } catch (error) {
