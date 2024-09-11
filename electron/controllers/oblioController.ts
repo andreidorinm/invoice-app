@@ -22,8 +22,12 @@ async function processXmlForOblio(filePath: string, callback: (error: Error | nu
       throw new Error('Niciun director selectat');
     }
 
-    const outputDir = path.join(filePaths[0], `Oblio_NIR_${new Date().toISOString().replace(/:/g, '-')}.xlsx`);
-    console.log("Salvarea fișierului la:", outputDir);
+    const documentDate = new Date(dataForXLS.documentDate).toISOString().split('T')[0];
+    const supplierName = dataForXLS.supplierName.replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = `Oblio_NIR_${documentDate}_${supplierName}.xlsx`;
+
+    const outputDir = path.join(filePaths[0], fileName);
+    console.log("Saving the file at:", outputDir);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Date Oblio');
@@ -38,7 +42,6 @@ async function processXmlForOblio(filePath: string, callback: (error: Error | nu
       { header: 'TVA Inclus', key: 'VATInclusion', width: 12 }
     ];
 
-    // Adding data rows dynamically
     dataForXLS.Oblio.Products.forEach((product: any) => {
       worksheet.addRow({
         ProductName: product['Denumire produs'],
@@ -51,13 +54,13 @@ async function processXmlForOblio(filePath: string, callback: (error: Error | nu
       });
     });
 
-    console.log("Scrierea datelor într-un fișier Excel...");
+    console.log("Writing the data to an Excel file...");
     await workbook.xlsx.writeFile(outputDir);
 
-    console.log("Fisier salvat cu succes la:", outputDir);
-    callback(null, `Fisier salvat cu succes la: ${outputDir}`);
+    console.log("File successfully saved at:", outputDir);
+    callback(null, `File saved successfully at: ${outputDir}`);
   } catch (error: any) {
-    console.error('Eroare la procesarea XML pentru Oblio:', error);
+    console.error('Error processing XML for Oblio:', error);
     callback(error);
   }
 }

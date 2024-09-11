@@ -23,6 +23,7 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
 
     let measureUnit = line.InvoicedQuantity.$.unitCode;
     measureUnit = measureUnit === 'H87' ? 'buc' : (measureUnit === 'KGM' ? 'kilogram' : measureUnit);
+    
     return {
       ProductName: line.Item.Name,
       ProductCode: '',

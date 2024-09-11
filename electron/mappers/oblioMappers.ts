@@ -11,7 +11,12 @@ export async function mapXmlToOblioXml(xmlData: any) {
       throw new Error("Invalid XML structure: Invoice details are missing.");
     }
 
+    const documentDate = invoice['cbc:IssueDate'][0];
+    const supplierName = invoice['cac:AccountingSupplierParty'][0]['cac:Party'][0]['cac:PartyName'][0]['cbc:Name'][0];
+
     return {
+      documentDate,
+      supplierName,
       Oblio: {
         Products: invoice['cac:InvoiceLine'].map((line: any) => {
           const basePrice = line['cac:Price'] && line['cac:Price'][0]['cbc:PriceAmount'] ? parseFloat(line['cac:Price'][0]['cbc:PriceAmount'][0]['_']) : 0;
