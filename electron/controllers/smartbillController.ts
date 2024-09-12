@@ -20,30 +20,38 @@ async function processXmlForSmartBill(filePath: any, callback: any) {
     if (!filePaths || filePaths.length === 0) {
       throw new Error('No directory selected');
     }
-
-    const outputDir = path.join(filePaths[0], `SmartBill_NIR_${new Date().toISOString().replace(/:/g, '-')}.xlsx`);
+    const documentDate = new Date(dataMapped.documentDate).toISOString().split('T')[0];
+    const supplierName = dataMapped.supplierName.replace(/[^a-zA-Z0-9]/g, '_');
+    const outputDir = path.join(filePaths[0], `Smartbill_NIR_${documentDate}_${supplierName}.xlsx`);
     console.log("Saving file at:", outputDir);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('NIR');
 
     worksheet.columns = [
-      { header: 'Denumire produs', key: 'Denumire produs', width: 30 },
-      { header: 'Cod produs', key: 'Cod produs', width: 20 },
+      { header: 'Cod', key: 'Cod', width: 15 },
+      { header: 'Articol', key: 'Articol', width: 30 },
+      { header: 'Categorie', key: 'Categorie', width: 20 },
+      { header: 'Tip', key: 'Tip', width: 15 },
+      { header: 'Cant.', key: 'Cant.', width: 10 },
       { header: 'Pret', key: 'Pret', width: 15 },
-      { header: 'Pretul contine TVA', key: 'Pretul contine TVA', width: 20 },
-      { header: 'Unitate masura', key: 'Unitate masura', width: 20 },
-      { header: 'Moneda', key: 'Moneda', width: 10 },
-      { header: 'Cota TVA', key: 'Cota TVA', width: 10 },
-      { header: 'Tip', key: 'Tip', width: 10 }
+      { header: 'Um', key: 'Um', width: 15 }
     ];
 
     dataForXLS.forEach((product: any) => {
-      worksheet.addRow(product);
+      worksheet.addRow({
+        'Cod': product.Cod,
+        'Articol': product.Articol,
+        'Categorie': product.Categorie,
+        'Tip': product.Tip,
+        'Cant.': product['Cant.'],
+        'Pret': product.Pret,
+        'Um': product.Um
+      });
     });
 
     await workbook.xlsx.writeFile(outputDir);
-    callback(null, `Fisier salvat cu succes la: ${outputDir}`);
+    callback(null, `File saved successfully at: ${outputDir}`);
   } catch (error) {
     console.error('Error processing XML for Smart Bill:', error);
     callback(error);

@@ -20,8 +20,21 @@ async function processForFacturisOnline(filePath: any, callback: any) {
 
       const result: any = await parseXml(data);
 
-      const issueDate = formatDate(result.Invoice['cbc:IssueDate']);
-      const folderName = `Factura_${issueDate}`;
+      const invoice = result.Invoice;
+      const supplierParty = invoice['cac:AccountingSupplierParty'];
+      const party = supplierParty['cac:Party'];
+
+      if (!party) {
+        throw new Error('Unable to find Party information in the XML');
+      }
+
+      const partyName = party['cac:PartyName'];
+
+      const issueDate = formatDate(invoice['cbc:IssueDate']);
+      let supplierName = partyName['cbc:Name'];
+
+      const folderName = `Factura_Facturis_Online_${supplierName}_${issueDate}`;
+
       const { filePaths } = await dialog.showOpenDialog({
         properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
         title: 'Select a folder to save your files',
@@ -38,11 +51,11 @@ async function processForFacturisOnline(filePath: any, callback: any) {
       }
 
       const nirCsvData = await mapXmlDataToFacturisOnlineNirCsv(result, markupPercentageNumber);
-      const nirOutputPath = path.join(outputDir, `NIR_${issueDate}.csv`);
+      const nirOutputPath = path.join(outputDir, `NIR_${supplierName}_${issueDate}.csv`);
       await writeCsvData(nirOutputPath, nirCsvData, callback);
 
       const nomenclatorCsvData = await mapXmlDataToFacturisOnlineNomenclatorCsv(result, markupPercentageNumber);
-      const nomenclatorOutputPath = path.join(outputDir, `NOMENCLATOR_${issueDate}.csv`);
+      const nomenclatorOutputPath = path.join(outputDir, `NOMENCLATOR_${supplierName}_${issueDate}.csv`);
       await writeCsvData(nomenclatorOutputPath, nomenclatorCsvData, callback);
     });
   } catch (error: any) {

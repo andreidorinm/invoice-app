@@ -1,49 +1,38 @@
 import { parseStringPromise } from 'xml2js';
-import store from '../config/electronStore';
 
 export async function mapXmlToSmartBillNir(xmlData: any) {
   try {
     const result = await parseStringPromise(xmlData);
     const invoice = result.Invoice;
-    const markupPercentage: any = store.get('markupPercentage', 0);
-    const isVatPayer = store.get('isVatPayer', false);
 
     if (!invoice || !invoice['cac:InvoiceLine']) {
       throw new Error("Invalid XML structure: Invoice details are missing.");
     }
 
-    const invoiceLines = invoice['cac:InvoiceLine'] || [];
+    const documentDate = invoice['cbc:IssueDate'][0];
+    const supplierName = invoice['cac:AccountingSupplierParty'][0]['cac:Party'][0]['cac:PartyName'][0]['cbc:Name'][0];
 
     return {
+      documentDate,
+      supplierName,
       SmartBill: {
-        Products: invoiceLines.map((line: any) => {
-          const item = line['cac:Item'][0];
-          const priceDetails = line['cac:Price'][0];
-          const quantityDetails = line['cbc:InvoicedQuantity'][0];
-          const taxCategory = item['cac:ClassifiedTaxCategory'][0];
-
-          if (!item || !priceDetails || !quantityDetails || !taxCategory) {
-            console.warn("Missing essential data, skipping line.");
-            return null;
-          }
-
-          const basePrice = parseFloat(priceDetails['cbc:PriceAmount'][0]['_']) ?? 0;
-          const vatRate = parseFloat(taxCategory['cbc:Percent'][0]) ?? 0;
-          let sellingPriceWithoutVat = basePrice * (1 + markupPercentage / 100);
-          const sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate / 100);
+        Products: invoice['cac:InvoiceLine'].map((line: any) => {
+          const basePrice = line['cac:Price'] && line['cac:Price'][0]['cbc:PriceAmount'] ? parseFloat(line['cac:Price'][0]['cbc:PriceAmount'][0]['_']) : 0;
+          const priceWithoutVat = basePrice;
 
           let measureUnit = line['cbc:InvoicedQuantity'][0]['$']['unitCode'];
           measureUnit = measureUnit === 'H87' ? 'BUC' : (measureUnit === 'KGM' ? 'Kg' : measureUnit);
 
+          const taxExemptionReason = 'Standard';
+
           return {
-            'Denumire produs': item['cbc:Name'][0],
-            'Cod produs': item['cac:SellersItemIdentification']?.['cbc:ID'][0] || 'N/A',
-            'Pret': isVatPayer ? sellingPriceWithVat.toFixed(2) : sellingPriceWithoutVat.toFixed(2),
-            'Pretul contine TVA': isVatPayer ? 'Da' : 'Nu',
-            'Unitate masura': measureUnit,
-            'Moneda': 'RON',
-            'Cota TVA': vatRate.toFixed(0),
-            'Tip': 'produs'
+            'Cod': line['cac:Item'] && line['cac:Item'][0]['cac:SellersItemIdentification'] ? line['cac:Item'][0]['cac:SellersItemIdentification'][0]['cbc:ID'][0] : 'Fara cod',
+            'Articol': line['cac:Item'] ? line['cac:Item'][0]['cbc:Name'][0] : 'Unknown Product',
+            'Categorie': taxExemptionReason,
+            'Tip': 'produs',
+            'Cant.': line['cbc:InvoicedQuantity'] ? line['cbc:InvoicedQuantity'][0]['_'] : 0,
+            'Pret': priceWithoutVat.toFixed(2),
+            'Um': measureUnit
           };
         }).filter((product: any) => product !== null)
       }
