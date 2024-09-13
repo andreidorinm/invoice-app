@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import electronStore from 'electron-store';
 import { autoUpdater } from 'electron-updater';
@@ -62,7 +62,7 @@ function createWindow() {
     win.loadFile(path.join(process.env.DIST, 'index.html'));
   }
 
-win.maximize();
+  win.maximize();
 
 }
 
