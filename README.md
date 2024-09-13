@@ -75,8 +75,8 @@ This compatibility allows businesses to import invoices directly into their pref
 
 For assistance, please contact our support team:
 
-- **Email**: support@invoiceconversionapp.com
-- **Phone**: +40 712 345 678
+- **Email**: andrei.dorin00@gmail.com
+- **Phone**: +40 746189449
 
 ## License
 
