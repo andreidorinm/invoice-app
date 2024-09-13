@@ -1,7 +1,7 @@
 import ExcelIcon from '../assets/excel.ico'
 import TabButton from './TabButton';
 
-const Header = ({ activeTab, handleTabClick }: any) => (
+const Header = ({ activeTab, handleTabClick, children }: any) => (
   <header className="p-4 bg-blue-600 text-white">
     <div className="container mx-auto flex justify-between items-center">
       <div className="flex items-center space-x-3">
@@ -22,6 +22,7 @@ const Header = ({ activeTab, handleTabClick }: any) => (
           ))}
         </div>
       </div>
+      {children}
     </div>
   </header>
 );

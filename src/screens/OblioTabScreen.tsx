@@ -84,7 +84,7 @@ const OblioTabScreen = () => {
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />
-      <div className="flex flex-grow overflow-hidden bg-black">
+      <div className="flex flex-grow overflow-hidden bg-gray-100">
         <GhidRapid steps={oblioSteps} />
         <MainContent
           title="Creează NIR Oblio"

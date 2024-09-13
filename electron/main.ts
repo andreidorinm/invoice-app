@@ -5,7 +5,7 @@ import { autoUpdater } from 'electron-updater';
 import { registerIPCHandlers } from './IPC/IPCHandlers';
 import contextMenu from 'electron-context-menu';
 
-// Menu.setApplicationMenu(null); // DEV TOOLS DEBUG COMMENT THIS LINE
+Menu.setApplicationMenu(null); // DEV TOOLS DEBUG COMMENT THIS LINE
 electronStore.initRenderer();
 
 process.env.DIST = path.join(__dirname, '../dist');

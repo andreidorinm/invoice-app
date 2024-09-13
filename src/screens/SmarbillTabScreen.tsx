@@ -84,14 +84,13 @@ const SmartbillTabScreen = () => {
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />
-      <div className="flex flex-grow overflow-hidden bg-black">
+      <div className="flex flex-grow overflow-hidden bg-gray-100">
         <GhidRapid steps={smartbillSteps} />
         <MainContent
           title="Creează NIR Smartbill"
           isVatPayer={isVatPayer}
           handleToggleVatPayerStatus={handleToggleVatPayerStatus}
           openDialog={openDialogForSmartbill}
-        // showMarkupAdjuster={false} // Uncomment if you plan to add MarkupAdjuster
         />
       </div>
     </div>

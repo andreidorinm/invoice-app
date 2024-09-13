@@ -223,25 +223,26 @@ const FileProcessorScreen = () => {
   };
 
   return (
-    <div className="flex flex-col bg-gray-100 h-full mt-4 container-factura">
+    <div className="flex flex-col bg-gray-100 h-screen w-screen">
       {loadingExe && <Loader />}
-
-      <div>
-        <button onClick={handleRunExe}>Incarca factura in format PDF</button>
-        {exeOutput && <div>Output: {exeOutput}</div>}
-        {exeError && <div>Error: {exeError}</div>}
-      </div>
-
-      {expiryDate && <ExpiryBanner expiryDate={expiryDate} calculateTimeLeft={calculateTimeLeft} />}
-
+  
+      {expiryDate && (
+        <ExpiryBanner expiryDate={expiryDate} calculateTimeLeft={calculateTimeLeft} />
+      )}
+  
       <Toast message={toastMessage} isVisible={showToast} onClose={closeToast} />
-
-      <Header
-        activeTab={activeTab}
-        handleTabClick={handleTabClick}
-      />
-
-      <div className="flex flex-grow overflow-hidden bg-black">
+  
+      <Header activeTab={activeTab} handleTabClick={handleTabClick}>
+        {/* Exe Button in the Header */}
+        <button
+          onClick={handleRunExe}
+          className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition duration-150"
+        >
+          Încarcă factura în format PDF
+        </button>
+      </Header>
+  
+      <div className="flex flex-grow">
         {activeTab === 'facturis' && (
           <FacturisTabScreen
             facturisType={facturisType}
@@ -261,8 +262,17 @@ const FileProcessorScreen = () => {
         {activeTab === 'oblio' && <OblioTabScreen />}
         {activeTab === 'smartbill' && <SmartbillTabScreen />}
       </div>
+  
+      {/* Display exe output or error at the bottom */}
+      {(exeOutput || exeError) && (
+        <div className="p-4 bg-gray-200">
+          {exeOutput && <div>Output: {exeOutput}</div>}
+          {exeError && <div>Error: {exeError}</div>}
+        </div>
+      )}
     </div>
   );
+  
 };
 
 export default FileProcessorScreen;
