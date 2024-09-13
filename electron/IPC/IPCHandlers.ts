@@ -7,6 +7,8 @@ import { processXmlForFreyaNir } from "../controllers/freyaController";
 import { processXmlForOblio } from "../controllers/oblioController";
 import { processXmlForSmartBill } from "../controllers/smartbillController";
 const { v4: uuidv4 } = require('uuid');
+const { spawn } = require('child_process');
+const path = require('path');
 
 const {
     SET_LICENSE_KEY,
@@ -22,7 +24,8 @@ const {
     GET_DEVICE_ID,
     PROCESS_XML_FOR_FREYA,
     PROCESS_XML_FOR_OBLIO,
-    PROCESS_XML_FOR_SMARTBILL
+    PROCESS_XML_FOR_SMARTBILL,
+    RUN_EXE
 } = IPC_ACTIONS.Window;
 
 const handleSetLicenseKey = (_event: IpcMainEvent, key: string) => {
@@ -175,23 +178,23 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
                             _event.reply('oblio-processing-error', error.message);
                         }
                         break;
-                        case "smartbill":
-                            try {
-                                console.log("Processing file for Smartbill NIR:", filePath);
-                                await processXmlForSmartBill(filePath, (err: any, message: any) => {
-                                    if (err) {
-                                        console.error('Error processing XML for Smartbill NIR:', err);
-                                        _event.reply('smartbill-processing-error', err.message);
-                                        return;
-                                    }
-                                    console.log("Smartbill processing completed:", message);
-                                    _event.reply('smartbill-xml-saved', message);
-                                });
-                            } catch (error: any) {
-                                console.error('Caught error during Smartbill processing:', error);
-                                _event.reply('smartbill-processing-error', error.message);
-                            }
-                            break;
+                    case "smartbill":
+                        try {
+                            console.log("Processing file for Smartbill NIR:", filePath);
+                            await processXmlForSmartBill(filePath, (err: any, message: any) => {
+                                if (err) {
+                                    console.error('Error processing XML for Smartbill NIR:', err);
+                                    _event.reply('smartbill-processing-error', err.message);
+                                    return;
+                                }
+                                console.log("Smartbill processing completed:", message);
+                                _event.reply('smartbill-xml-saved', message);
+                            });
+                        } catch (error: any) {
+                            console.error('Caught error during Smartbill processing:', error);
+                            _event.reply('smartbill-processing-error', error.message);
+                        }
+                        break;
                     default:
                         console.log('Unsupported facturis type:', facturisType);
                         _event.reply('file-processing-error', 'Unsupported facturis type');
@@ -255,6 +258,40 @@ const handleGetDeviceId = (_event: IpcMainInvokeEvent): string => {
     return deviceId as string;
 }
 
+const handleRunExe = async (_event: IpcMainInvokeEvent) => {
+    let exePath;
+
+    if (process.env.NODE_ENV === 'development') {
+        exePath = path.join(__dirname, '../src/assets/PROGRAM_FACTURI.exe');
+    } else {
+        exePath = path.join(process.resourcesPath, 'assets', 'PROGRAM_FACTURI.exe');
+    }
+
+    return new Promise((resolve, reject) => {
+        const child = spawn(exePath);
+
+        child.stdout.on('data', (data: any) => {
+            console.log(`stdout: ${data}`);
+            _event.sender.send('exe-output', data.toString()); // Send output via event sender
+        });
+
+        child.stderr.on('data', (data: any) => {
+            console.error(`stderr: ${data}`);
+            _event.sender.send('exe-error', data.toString()); // Send error via event sender
+        });
+
+        child.on('close', (code: number) => {
+            console.log(`Child process exited with code ${code}`);
+            resolve(code);  // Return the exit code via the promise
+        });
+
+        child.on('error', (err: Error) => {
+            console.error('Failed to start process:', err);
+            reject(err);  // Return the error via the promise
+        });
+    });
+};
+
 export const registerIPCHandlers = () => {
     ipcMain.on(SET_LICENSE_KEY, handleSetLicenseKey);
     ipcMain.handle(GET_LICENSE_KEY, (event, key) => handleGetLicenseKey(event, key));
@@ -276,6 +313,8 @@ export const registerIPCHandlers = () => {
     ipcMain.on(PROCESS_XML_FOR_OBLIO, handleProcessXmlForOblio);
 
     ipcMain.on(PROCESS_XML_FOR_SMARTBILL, handleProcessXmlForSmartbill);
+
+    ipcMain.handle(RUN_EXE, handleRunExe);
 
     ipcMain.handle(GET_DEVICE_ID, handleGetDeviceId);
 }

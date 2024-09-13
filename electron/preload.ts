@@ -12,7 +12,8 @@ const {
   OPEN_FILE_DIALOG,
   SET_FACTURIS_TYPE,
   GET_FACTURIS_TYPE,
-  GET_DEVICE_ID
+  GET_DEVICE_ID,
+  RUN_EXE
 } = IPC_ACTIONS.Window;
 
 // --------- Expose some API to the Renderer process ---------
@@ -145,6 +146,7 @@ const safeExposeIpcRenderer = () => ({
   getDeviceId: () => ipcRenderer.invoke(GET_DEVICE_ID),
   processFile: (filePath: any) => ipcRenderer.send('process-file', filePath),
   processXmlForFreya: (filePath: string) => ipcRenderer.send('process-xml-for-freya', filePath),
+  runExe: () => ipcRenderer.invoke(RUN_EXE),
   receiveMessage: (channel: any, func: any) => {
     const validChannels = ['csv-written', 'oblio-xml-saved', 'smartbill-xml-saved', 'freya-xml-saved', 'file-processing-error', 'license-key-updated', 'freya-processing-error', 'oblio-processing-error', 'smartbill-processing-error'];
     if (validChannels.includes(channel)) {

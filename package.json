@@ -46,6 +46,11 @@
   },
   "main": "dist-electron/main.js",
   "build": {
+    "files": [
+      "dist/",
+      "dist-electron/",
+      "assets/**/*"
+    ],
     "appId": "ClarFactura in NIR",
     "productName": "ClarFactura in NIR",
     "publish": [

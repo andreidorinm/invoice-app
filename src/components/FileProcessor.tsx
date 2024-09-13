@@ -16,6 +16,33 @@ const FileProcessor = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [activeTab, setActiveTab] = useState('facturis');
   const { expiryDate } = useLicenseKey();
+  const [exeOutput, setExeOutput] = useState('');
+  const [exeError, setExeError] = useState('');
+  const [loadingExe, setLoadingExe] = useState(false); // Loader state
+
+  const handleRunExe = () => {
+    setLoadingExe(true); // Show loader
+    window.api.runExe()
+      .then((code: any) => {
+        console.log(`Exe finished with exit code ${code}`);
+      })
+      .catch((error: any) => {
+        console.error('Error running exe:', error);
+      })
+      .finally(() => {
+        setLoadingExe(false); // Hide loader when done
+      });
+  };
+
+  useEffect(() => {
+    window.api.receiveMessage('exe-output', (data: any) => {
+      setExeOutput(data);
+    });
+
+    window.api.receiveMessage('exe-error', (error: any) => {
+      setExeError(error);
+    });
+  }, []);
 
   const calculateTimeLeft = () => {
     if (!expiryDate) {
@@ -44,12 +71,12 @@ const FileProcessor = () => {
       const storedMarkup = await window.api.getMarkupPercentage();
       const vatPayerStatus = await window.api.getVatPayerStatus();
       const loadedFacturisType = await window.api.getFacturisType();
-  
+
       setFacturisType(loadedFacturisType);
       setIsVatPayer(vatPayerStatus);
       setMarkup(storedMarkup.toString());
       setLoading(false);
-  
+
       switch (loadedFacturisType) {
         case 'freya':
           setActiveTab('freya');
@@ -67,7 +94,7 @@ const FileProcessor = () => {
     };
     initialize();
   }, []);
-  
+
 
   const handleBlurMarkup = async () => {
     if (markup.trim() === '') {
@@ -127,7 +154,7 @@ const FileProcessor = () => {
     };
 
     const handleError = (error: any) => {
-    console.log("Processing error:", error);  // Debug log
+      console.log("Processing error:", error);  // Debug log
       setShowToast(true);
       setToastMessage(error);
     };
@@ -196,6 +223,16 @@ const FileProcessor = () => {
 
   return (
     <div className="flex flex-col bg-gray-100 h-full mt-4 container-factura">
+      {loadingExe && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="loader"></div>
+        </div>
+      )}
+      <div>
+        <button onClick={handleRunExe}>Incarca factura in format PDF</button>
+        {exeOutput && <div>Output: {exeOutput}</div>}
+        {exeError && <div>Error: {exeError}</div>}
+      </div>
       {expiryDate && (
         <div className="fixed right-0 bottom-0 p-4 space-y-2">
           <span className="block text-right text-sm text-white bg-gray-800 p-2 rounded">Licenta expira pe data: {expiryDate}</span>
