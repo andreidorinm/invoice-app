@@ -12,7 +12,6 @@ import SmartbillTabScreen from './SmarbillTabScreen';
 const FileProcessorScreen = () => {
   const [markup, setMarkup] = useState('');
   const [isVatPayer, setIsVatPayer] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [facturisType, setFacturisType] = useState('facturis desktop');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -76,7 +75,6 @@ const FileProcessorScreen = () => {
       setFacturisType(loadedFacturisType);
       setIsVatPayer(vatPayerStatus);
       setMarkup(storedMarkup.toString());
-      setLoading(false);
 
       switch (loadedFacturisType) {
         case 'freya':
@@ -225,13 +223,13 @@ const FileProcessorScreen = () => {
   return (
     <div className="flex flex-col bg-gray-100 h-screen w-screen">
       {loadingExe && <Loader />}
-  
+
       {expiryDate && (
         <ExpiryBanner expiryDate={expiryDate} calculateTimeLeft={calculateTimeLeft} />
       )}
-  
+
       <Toast message={toastMessage} isVisible={showToast} onClose={closeToast} />
-  
+
       <Header activeTab={activeTab} handleTabClick={handleTabClick}>
         {/* Exe Button in the Header */}
         <button
@@ -241,7 +239,7 @@ const FileProcessorScreen = () => {
           Încarcă factura în format PDF
         </button>
       </Header>
-  
+
       <div className="flex flex-grow">
         {activeTab === 'facturis' && (
           <FacturisTabScreen
@@ -262,7 +260,7 @@ const FileProcessorScreen = () => {
         {activeTab === 'oblio' && <OblioTabScreen />}
         {activeTab === 'smartbill' && <SmartbillTabScreen />}
       </div>
-  
+
       {/* Display exe output or error at the bottom */}
       {(exeOutput || exeError) && (
         <div className="p-4 bg-gray-200">
@@ -272,7 +270,7 @@ const FileProcessorScreen = () => {
       )}
     </div>
   );
-  
+
 };
 
 export default FileProcessorScreen;
