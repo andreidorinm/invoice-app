@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { getDeviceId, getLicenseKey, setLicenseKey } from "../data/IPCMessages";
 import { useNavigate } from "react-router-dom";
-import LoadingScreen from "../screens/LoadingScreen";
 import axios from "axios";
+import Loader from "../components/Loader";
 
 const LicenseKeyContext = createContext<LicenseKeyProviderValue | null>(null);
 
@@ -110,7 +110,7 @@ const LicenseKeyProvider = ({ children }: LicenseKeyProviderProps) => {
 
     return (
         <LicenseKeyContext.Provider value={contextValue}>
-            {loading ? <LoadingScreen /> : children}
+            {loading ? <Loader /> : children}
         </LicenseKeyContext.Provider>
     );
 };
