@@ -32,7 +32,7 @@ export async function mapXmlToOblioXml(xmlData: any) {
             'U.M.': measureUnit,
             'Cantitate': line['cbc:InvoicedQuantity'] ? line['cbc:InvoicedQuantity'][0]['_'] : 0,
             'Pret achizitie': priceWithoutVat.toFixed(2),
-            'Cota TVA': vatRate.toFixed(0) + '%',
+            'Cota TVA': vatRate.toFixed(0),
             'TVA inclus': isVatPayer ? 'DA' : 'NU'
           };
         })

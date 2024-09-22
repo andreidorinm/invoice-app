@@ -35,13 +35,17 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
     };
   });
 
+    const supplierName = invoice?.AccountingSupplierParty?.Party?.PartyName?.Name 
+    || invoice?.AccountingSupplierParty?.Party?.PartyLegalEntity?.RegistrationName 
+    || 'Unknown Supplier';
+
   return {
     NIR: {
       DocumentSeries: invoice.ID,
       DocumentNo: invoice.ID,
       DocumentDate: formattedDocumentDate,
       DeadlineDate: formattedDocumentDate,
-      Supplier: invoice.AccountingSupplierParty.Party.PartyName.Name,
+      Supplier: supplierName,
       FinancialAdministration: "Gestiune materii prime",
       Products: products
     }
