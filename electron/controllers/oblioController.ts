@@ -33,25 +33,17 @@ async function processXmlForOblio(filePath: string, callback: (error: Error | nu
     const worksheet = workbook.addWorksheet('Date Oblio');
 
     worksheet.columns = [
-      { header: 'Denumire Produs', key: 'ProductName', width: 20 },
-      { header: 'Cod Produs', key: 'ProductCode', width: 20 },
-      { header: 'Unitate de Măsură', key: 'MeasureUnit', width: 15 },
-      { header: 'Cantitate', key: 'Units', width: 10 },
-      { header: 'Preț Achiziție', key: 'UnitPriceWithoutVat', width: 18 },
-      { header: 'Cota TVA', key: 'VatRate', width: 10 },
-      { header: 'TVA Inclus', key: 'VATInclusion', width: 12 }
+      { header: 'Denumire produs', key: 'Denumire produs', width: 20 },
+      { header: 'Cod produs', key: 'Cod produs', width: 20 },
+      { header: 'U.M.', key: 'U.M.', width: 15 },
+      { header: 'Cantitate', key: 'Cantitate', width: 10 },
+      { header: 'Pret achizitie', key: 'Pret achizitie', width: 18 },
+      { header: 'Cota TVA', key: 'Cota TVA', width: 10 },
+      { header: 'TVA Inclus', key: 'TVA Inclus', width: 12 },
     ];
 
     dataForXLS.Oblio.Products.forEach((product: any) => {
-      worksheet.addRow({
-        ProductName: product['Denumire produs'],
-        ProductCode: product['Cod produs'],
-        MeasureUnit: product['U.M.'],
-        Units: product['Cantitate'],
-        UnitPriceWithoutVat: product['Pret achizitie'],
-        VatRate: product['Cota TVA'],
-        VATInclusion: product['TVA inclus']
-      });
+      worksheet.addRow(product);
     });
 
     console.log("Writing the data to an Excel file...");

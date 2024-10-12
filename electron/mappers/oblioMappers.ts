@@ -19,18 +19,32 @@ export async function mapXmlToOblioXml(xmlData: any) {
       supplierName,
       Oblio: {
         Products: invoice['cac:InvoiceLine'].map((line: any) => {
-          const basePrice = line['cac:Price'] && line['cac:Price'][0]['cbc:PriceAmount'] ? parseFloat(line['cac:Price'][0]['cbc:PriceAmount'][0]['_']) : 0;
-          const vatRate = line['cac:Item'] && line['cac:Item'][0]['cac:ClassifiedTaxCategory'] ? parseFloat(line['cac:Item'][0]['cac:ClassifiedTaxCategory'][0]['cbc:Percent'][0]) : 0;
+          const basePrice =
+            line['cac:Price'] && line['cac:Price'][0]['cbc:PriceAmount']
+              ? parseFloat(line['cac:Price'][0]['cbc:PriceAmount'][0]['_'])
+              : 0;
+          const vatRate =
+            line['cac:Item'] && line['cac:Item'][0]['cac:ClassifiedTaxCategory']
+              ? parseFloat(line['cac:Item'][0]['cac:ClassifiedTaxCategory'][0]['cbc:Percent'][0])
+              : 0;
           const priceWithoutVat = basePrice;
 
           let measureUnit = line['cbc:InvoicedQuantity'][0]['$']['unitCode'];
-          measureUnit = measureUnit === 'H87' ? 'BUC' : (measureUnit === 'KGM' ? 'Kg' : measureUnit);
+          measureUnit =
+            measureUnit === 'H87' ? 'BUC' : measureUnit === 'KGM' ? 'Kg' : measureUnit;
 
           return {
-            'Denumire produs': line['cac:Item'] ? line['cac:Item'][0]['cbc:Name'][0] : 'Unknown Product',
-            'Cod produs': line['cac:Item'] && line['cac:Item'][0]['cac:SellersItemIdentification'] ? line['cac:Item'][0]['cac:SellersItemIdentification'][0]['cbc:ID'][0] : 'Fara cod',
+            'Denumire produs': line['cac:Item']
+              ? line['cac:Item'][0]['cbc:Name'][0]
+              : 'Unknown Product',
+            'Cod produs':
+              line['cac:Item'] && line['cac:Item'][0]['cac:SellersItemIdentification']
+                ? line['cac:Item'][0]['cac:SellersItemIdentification'][0]['cbc:ID'][0]
+                : '',
             'U.M.': measureUnit,
-            'Cantitate': line['cbc:InvoicedQuantity'] ? line['cbc:InvoicedQuantity'][0]['_'] : 0,
+            'Cantitate': line['cbc:InvoicedQuantity']
+              ? line['cbc:InvoicedQuantity'][0]['_']
+              : 0,
             'Pret achizitie': priceWithoutVat.toFixed(2),
             'Cota TVA': vatRate.toFixed(0),
             'TVA inclus': isVatPayer ? 'DA' : 'NU'

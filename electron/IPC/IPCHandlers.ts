@@ -6,9 +6,12 @@ import { processForFacturisDesktop } from "../controllers/desktopController";
 import { processXmlForFreyaNir } from "../controllers/freyaController";
 import { processXmlForOblio } from "../controllers/oblioController";
 import { processXmlForSmartBill } from "../controllers/smartbillController";
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import AdmZip from 'adm-zip'; 
 const { v4: uuidv4 } = require('uuid');
 const { spawn } = require('child_process');
-const path = require('path');
 
 const {
     SET_LICENSE_KEY,
@@ -113,7 +116,7 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
     try {
         const result = await dialog.showOpenDialog({
             properties: ['openFile', 'multiSelections'],
-            filters: [{ name: 'XML Files', extensions: ['xml'] }]
+            filters: [{ name: 'XML or ZIP Files', extensions: ['xml', 'zip'] }]
         });
 
         if (!result.canceled && result.filePaths.length > 0) {
@@ -121,84 +124,43 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
             const facturisType = store.get("facturisType", "facturis desktop");
 
             for (const filePath of result.filePaths) {
-                switch (facturisType) {
-                    case "facturis online":
-                        await processForFacturisOnline(filePath, (err: any, message: any) => {
-                            if (err) {
-                                console.error('Error processing file:', err);
-                                _event.reply('file-processing-error', err.message);
-                                return;
+                const extension = path.extname(filePath).toLowerCase();
+                if (extension === '.zip') {
+                    console.log("Processing ZIP file:", filePath);
+
+                    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'unzipped-'));
+                    console.log("Extracting ZIP to temporary directory:", tempDir);
+
+                    const zip = new AdmZip(filePath);
+                    zip.extractAllTo(tempDir, true);
+
+                    const xmlFiles: any[] = [];
+                    const findXmlFiles = (dir: any) => {
+                        const files = fs.readdirSync(dir);
+                        for (const file of files) {
+                            const fullPath = path.join(dir, file);
+                            const stat = fs.statSync(fullPath);
+                            if (stat.isDirectory()) {
+                                findXmlFiles(fullPath);
+                            } else if (path.extname(fullPath).toLowerCase() === '.xml') {
+                                xmlFiles.push(fullPath);
                             }
-                            console.log(message);
-                            _event.reply('csv-written', message);
-                        });
-                        break;
-                    case "facturis desktop":
-                        await processForFacturisDesktop(filePath, (err: any, message: any) => {
-                            if (err) {
-                                console.error('Error processing file:', err);
-                                _event.reply('file-processing-error', err.message);
-                                return;
-                            }
-                            console.log(message);
-                            _event.reply('csv-written', message);
-                        });
-                        break;
-                    case "freya":
-                        try {
-                            console.log("Processing file for Freya NIR:", filePath);
-                            await processXmlForFreyaNir(filePath, (err: any, message: any) => {
-                                if (err) {
-                                    console.error('Error processing XML for Freya NIR:', err);
-                                    _event.reply('freya-processing-error', err.message);
-                                    return;
-                                }
-                                console.log("Freya processing completed:", message);
-                                _event.reply('freya-xml-saved', message);
-                            });
-                        } catch (error: any) {
-                            console.error('Caught error during Freya processing:', error);
-                            _event.reply('freya-processing-error', error.message);
                         }
-                        break;
-                    case "oblio":
-                        try {
-                            console.log("Processing file for Oblio NIR:", filePath);
-                            await processXmlForOblio(filePath, (err: any, message: any) => {
-                                if (err) {
-                                    console.error('Error processing XML for Oblio NIR:', err);
-                                    _event.reply('oblio-processing-error', err.message);
-                                    return;
-                                }
-                                console.log("Oblio processing completed:", message);
-                                _event.reply('oblio-xml-saved', message);
-                            });
-                        } catch (error: any) {
-                            console.error('Caught error during Oblio processing:', error);
-                            _event.reply('oblio-processing-error', error.message);
-                        }
-                        break;
-                    case "smartbill":
-                        try {
-                            console.log("Processing file for Smartbill NIR:", filePath);
-                            await processXmlForSmartBill(filePath, (err: any, message: any) => {
-                                if (err) {
-                                    console.error('Error processing XML for Smartbill NIR:', err);
-                                    _event.reply('smartbill-processing-error', err.message);
-                                    return;
-                                }
-                                console.log("Smartbill processing completed:", message);
-                                _event.reply('smartbill-xml-saved', message);
-                            });
-                        } catch (error: any) {
-                            console.error('Caught error during Smartbill processing:', error);
-                            _event.reply('smartbill-processing-error', error.message);
-                        }
-                        break;
-                    default:
-                        console.log('Unsupported facturis type:', facturisType);
-                        _event.reply('file-processing-error', 'Unsupported facturis type');
-                        break;
+                    };
+                    findXmlFiles(tempDir);
+
+                    console.log("Found XML files:", xmlFiles);
+
+                    for (const xmlFilePath of xmlFiles) {
+                        await processFile(xmlFilePath, facturisType, _event);
+                    }
+
+                    fs.rmSync(tempDir, { recursive: true, force: true });
+                } else if (extension === '.xml') {
+                    await processFile(filePath, facturisType, _event);
+                } else {
+                    console.log('Unsupported file type:', extension);
+                    _event.reply('file-processing-error', 'Unsupported file type');
                 }
             }
         }
@@ -208,6 +170,87 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
     }
 };
 
+async function processFile(filePath: any, facturisType: any, _event: any) {
+    switch (facturisType) {
+        case "facturis online":
+            await processForFacturisOnline(filePath, (err: any, message: any) => {
+                if (err) {
+                    console.error('Error processing file:', err);
+                    _event.reply('file-processing-error', err.message);
+                    return;
+                }
+                console.log(message);
+                _event.reply('csv-written', message);
+            });
+            break;
+        case "facturis desktop":
+            await processForFacturisDesktop(filePath, (err: any, message: any) => {
+                if (err) {
+                    console.error('Error processing file:', err);
+                    _event.reply('file-processing-error', err.message);
+                    return;
+                }
+                console.log(message);
+                _event.reply('csv-written', message);
+            });
+            break;
+        case "freya":
+            try {
+                console.log("Processing file for Freya NIR:", filePath);
+                await processXmlForFreyaNir(filePath, (err, message) => {
+                    if (err) {
+                        console.error('Error processing XML for Freya NIR:', err);
+                        _event.reply('freya-processing-error', err.message);
+                        return;
+                    }
+                    console.log("Freya processing completed:", message);
+                    _event.reply('freya-xml-saved', message);
+                });
+            } catch (error: any) {
+                console.error('Caught error during Freya processing:', error);
+                _event.reply('freya-processing-error', error.message);
+            }
+            break;
+        case "oblio":
+            try {
+                console.log("Processing file for Oblio NIR:", filePath);
+                await processXmlForOblio(filePath, (err, message) => {
+                    if (err) {
+                        console.error('Error processing XML for Oblio NIR:', err);
+                        _event.reply('oblio-processing-error', err.message);
+                        return;
+                    }
+                    console.log("Oblio processing completed:", message);
+                    _event.reply('oblio-xml-saved', message);
+                });
+            } catch (error: any) {
+                console.error('Caught error during Oblio processing:', error);
+                _event.reply('oblio-processing-error', error.message);
+            }
+            break;
+        case "smartbill":
+            try {
+                console.log("Processing file for Smartbill NIR:", filePath);
+                await processXmlForSmartBill(filePath, (err: any, message: any) => {
+                    if (err) {
+                        console.error('Error processing XML for Smartbill NIR:', err);
+                        _event.reply('smartbill-processing-error', err.message);
+                        return;
+                    }
+                    console.log("Smartbill processing completed:", message);
+                    _event.reply('smartbill-xml-saved', message);
+                });
+            } catch (error: any) {
+                console.error('Caught error during Smartbill processing:', error);
+                _event.reply('smartbill-processing-error', error.message);
+            }
+            break;
+        default:
+            console.log('Unsupported facturis type:', facturisType);
+            _event.reply('file-processing-error', 'Unsupported facturis type');
+            break;
+    }
+}
 
 const handleSetMarkupPercentage = (_event: IpcMainEvent, markupPercentage: any) => {
     const store = new electronStore();
