@@ -24,8 +24,13 @@ export async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonDa
       sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
     } else {
       sellingPriceWithVat = priceWithVat * markupMultiplier;
-      sellingPriceWithoutVat = sellingPriceWithVat; // Since VAT details don't change the logic for non-payers, can keep same or use only sellingPriceWithVat
+      sellingPriceWithoutVat = sellingPriceWithVat;
     }
+
+    const productCode =
+      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID']?.['_'] ||
+      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID'] ||
+      '';
 
     let outputVatRate = isVatPayer ? (vatRate * 100).toFixed(0) + '%' : 'Neplatitor de TVA';
 
@@ -37,7 +42,7 @@ export async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonDa
       'Pret cu TVA': sellingPriceWithVat.toFixed(2),
       'Moneda': line['cac:Price']['cbc:PriceAmount']['currencyID'] || 'RON',
       'Cod EAN': '',
-      'Cod Produs': '',
+      'Cod Produs': productCode,
       'Observatii 1': '',
       'Observatii 2': '',
       'Tip': 'Produs',
@@ -71,28 +76,32 @@ export async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, mark
       : 0;
 
     let priceWithoutVat = basePrice;
-    let priceWithVat = parseFloat((basePrice * (1 + vatRate)).toFixed(4)); // Convert back to number after rounding
+    let priceWithVat = parseFloat((basePrice * (1 + vatRate)).toFixed(4));
 
     const isVatPayer = store.get('isVatPayer', false);
     const markupMultiplier = 1 + markupPercentage / 100;
 
-    // Check for special case items
     if (line['cac:Item']['cbc:Name'].includes("GARANTIE SGR")) {
       priceWithoutVat = 0.50;
       priceWithVat = 0.50;
-      vatRate = 0; // Set VAT rate to 0% for this specific item
+      vatRate = 0;
     }
 
-    let sellingPriceWithoutVat = parseFloat((priceWithoutVat * markupMultiplier).toFixed(3)); // Convert back to number after rounding
-    let sellingPriceWithVat = parseFloat((sellingPriceWithoutVat * (1 + vatRate)).toFixed(4)); // Convert back to number after rounding
+    let sellingPriceWithoutVat = parseFloat((priceWithoutVat * markupMultiplier).toFixed(3));
+    let sellingPriceWithVat = parseFloat((sellingPriceWithoutVat * (1 + vatRate)).toFixed(4));
 
     if (!isVatPayer) {
-      sellingPriceWithVat = parseFloat((priceWithVat * markupMultiplier).toFixed(4)); // Convert back to number after rounding
-      sellingPriceWithoutVat = sellingPriceWithVat; // Non-VAT payers use the same value for without VAT
+      sellingPriceWithVat = parseFloat((priceWithVat * markupMultiplier).toFixed(4));
+      sellingPriceWithoutVat = sellingPriceWithVat;
     }
 
+    const productCode =
+      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID']?.['_'] ||
+      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID'] ||
+      '';
+
     const productName = line['cac:Item']['cbc:Name'];
-    let quantity = parseFloat(line['cbc:InvoicedQuantity']['_']); // Ensure quantity is a number
+    let quantity = parseFloat(line['cbc:InvoicedQuantity']['_']);
 
     let outputVatRate = isVatPayer ? (vatRate * 100).toFixed(0) + '%' : 'Neplatitor de TVA';
 
@@ -100,7 +109,7 @@ export async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, mark
       'Nr. crt.': index + 1,
       'Nume Produs': productName,
       'UM': 'BUC',
-      'Cod Produs EAN': '',
+      'Cod Produs EAN': productCode,
       'Cantitate': quantity.toString(),
       'Pret achizitie fara TVA': priceWithoutVat.toFixed(3),
       'Pret achizitie cu TVA': priceWithVat.toString(),
@@ -116,4 +125,3 @@ export async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, mark
 
   return csvRows;
 }
-

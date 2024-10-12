@@ -211,7 +211,7 @@ async function processFile(filePath: any, facturisType: any, _event: any, saveDi
         case "freya":
             try {
                 console.log("Processing file for Freya NIR:", filePath);
-                await processXmlForFreyaNir(filePath, saveDirectory, (err, message) => {
+                await processXmlForFreyaNir(filePath, saveDirectory, (err: any, message: any) => {
                     if (err) {
                         console.error('Error processing XML for Freya NIR:', err);
                         _event.reply('freya-processing-error', err.message);

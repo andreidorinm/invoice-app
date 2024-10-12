@@ -22,7 +22,7 @@ const FacturisTabScreen = ({
     { icon: '🔧', text: 'Setează Tipul Facturis (Desktop sau Online)' },
     { icon: '💼', text: 'Pune un status plătitor sau neplătitor TVA' },
     { icon: '💹', text: 'Ajustează Procentajul de Adaos Comercial și confirmă.' },
-    { icon: '📤', text: 'Încarcă fișierul XML pentru procesare.' },
+    { icon: '📤', text: 'Încarcă fișierul XML sau ZIP pentru procesare.' },
   ];
   return (
     <>

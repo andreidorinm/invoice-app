@@ -1,7 +1,6 @@
-// OblioTab.jsx
 import { useEffect, useState } from 'react';
 import Toast from '../components/Toast';
-import GhidRapid from '../components/GhidRapid'; // Import the GhidRapid component
+import GhidRapid from '../components/GhidRapid';
 import MainContent from '../components/MainContent';
 
 const OblioTabScreen = () => {
@@ -9,7 +8,6 @@ const OblioTabScreen = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
-  // Initialize VAT Payer Status
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -22,7 +20,6 @@ const OblioTabScreen = () => {
     initialize();
   }, []);
 
-  // Set up event listeners for file processing
   useEffect(() => {
     const handleFileProcessed = (message: any) => {
       setShowToast(true);
@@ -43,7 +40,6 @@ const OblioTabScreen = () => {
     };
   }, []);
 
-  // Toggle VAT Payer Status
   const handleToggleVatPayerStatus = async () => {
     const newStatus = !isVatPayer;
     try {
@@ -58,7 +54,6 @@ const OblioTabScreen = () => {
     }
   };
 
-  // Open File Dialog for Oblio
   const openDialogForOblio = async () => {
     try {
       await window.api.setFacturisType('oblio');
@@ -71,10 +66,9 @@ const OblioTabScreen = () => {
     }
   };
 
-  // Define the steps for the Oblio tab
   const oblioSteps = [
     { icon: '💼', text: 'Pune un status plătitor sau neplătitor TVA' },
-    { icon: '📤', text: 'Încarcă fișierul XML pentru procesare.' },
+    { icon: '📤', text: 'Încarcă fișierul XML sau ZIP pentru procesare.' },
   ];
 
   return (

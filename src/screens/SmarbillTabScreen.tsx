@@ -1,4 +1,3 @@
-// SmartbillTabScreen.jsx
 import { useEffect, useState } from 'react';
 import Toast from '../components/Toast';
 import GhidRapid from '../components/GhidRapid';
@@ -9,7 +8,6 @@ const SmartbillTabScreen = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
-  // Initialize VAT Payer Status
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -22,7 +20,6 @@ const SmartbillTabScreen = () => {
     initialize();
   }, []);
 
-  // Set up event listeners for file processing
   useEffect(() => {
     const handleFileProcessed = (message: any) => {
       setShowToast(true);
@@ -43,7 +40,6 @@ const SmartbillTabScreen = () => {
     };
   }, []);
 
-  // Toggle VAT Payer Status
   const handleToggleVatPayerStatus = async () => {
     const newStatus = !isVatPayer;
     try {
@@ -58,7 +54,6 @@ const SmartbillTabScreen = () => {
     }
   };
 
-  // Open File Dialog for Smartbill
   const openDialogForSmartbill = async () => {
     try {
       await window.api.setFacturisType('smartbill');
@@ -71,10 +66,9 @@ const SmartbillTabScreen = () => {
     }
   };
 
-  // Define the steps for the Smartbill tab
   const smartbillSteps = [
     { icon: '💼', text: 'Pune un status plătitor sau neplătitor TVA' },
-    { icon: '📤', text: 'Încarcă fișierul XML pentru procesare.' },
+    { icon: '📤', text: 'Încarcă fișierul XML sau ZIP pentru procesare.' },
   ];
 
   return (

@@ -33,14 +33,18 @@ export async function mapXmlToOblioXml(xmlData: any) {
           measureUnit =
             measureUnit === 'H87' ? 'BUC' : measureUnit === 'KGM' ? 'Kg' : measureUnit;
 
+          const productCode =
+            line['cac:Item'] &&
+            line['cac:Item'][0]['cac:StandardItemIdentification'] &&
+            line['cac:Item'][0]['cac:StandardItemIdentification'][0]['cbc:ID'][0]['_']
+              ? line['cac:Item'][0]['cac:StandardItemIdentification'][0]['cbc:ID'][0]['_']
+              : line['cac:Item'][0]['cac:StandardItemIdentification'][0]['cbc:ID'][0];
+
           return {
             'Denumire produs': line['cac:Item']
               ? line['cac:Item'][0]['cbc:Name'][0]
               : 'Unknown Product',
-            'Cod produs':
-              line['cac:Item'] && line['cac:Item'][0]['cac:SellersItemIdentification']
-                ? line['cac:Item'][0]['cac:SellersItemIdentification'][0]['cbc:ID'][0]
-                : '',
+            'Cod produs': productCode,
             'U.M.': measureUnit,
             'Cantitate': line['cbc:InvoicedQuantity']
               ? line['cbc:InvoicedQuantity'][0]['_']

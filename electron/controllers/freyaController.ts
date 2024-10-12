@@ -46,9 +46,13 @@ async function processXmlForFreyaNir(
     ]);
 
     dataForXLS.NIR.Products.forEach((product: any) => {
+      const productCode =
+        product.ProductCode ||
+        '';
+
       worksheet.addRow([
         product.ProductName,
-        product.ProductCode,
+        productCode,
         product.Units,
         product.UnitPriceWithoutVat,
         product.Discount,
