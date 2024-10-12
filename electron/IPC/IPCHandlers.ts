@@ -9,7 +9,7 @@ import { processXmlForSmartBill } from "../controllers/smartbillController";
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import AdmZip from 'adm-zip'; 
+import AdmZip from 'adm-zip';
 const { v4: uuidv4 } = require('uuid');
 const { spawn } = require('child_process');
 
@@ -51,8 +51,8 @@ const handleGetLicenseKey = (_event: IpcMainInvokeEvent, _key: string): string |
     return ''
 }
 
-const handleProcessXmlForFreya = (_event: IpcMainEvent, filePath: string) => {
-    processXmlForFreyaNir(filePath, (err: any, message: any) => {
+const handleProcessXmlForFreya = (_event: IpcMainEvent, filePath: string, saveDirectory: string) => {
+    processXmlForFreyaNir(filePath, saveDirectory, (err: any, message: any) => {
         if (err) {
             console.error('Error processing XML for Freya NIR:', err);
             _event.reply('freya-processing-error', err.message);
@@ -63,8 +63,8 @@ const handleProcessXmlForFreya = (_event: IpcMainEvent, filePath: string) => {
     });
 };
 
-const handleProcessXmlForOblio = (_event: IpcMainEvent, filePath: string) => {
-    processXmlForOblio(filePath, (err: any, message: any) => {
+const handleProcessXmlForOblio = (_event: IpcMainEvent, filePath: string, saveDirectory: string) => {
+    processXmlForOblio(filePath, saveDirectory, (err: any, message: any) => {
         if (err) {
             console.error('Error processing XML for Oblio NIR:', err);
             _event.reply('oblio-processing-error', err.message);
@@ -75,8 +75,8 @@ const handleProcessXmlForOblio = (_event: IpcMainEvent, filePath: string) => {
     });
 };
 
-const handleProcessXmlForSmartbill = (_event: IpcMainEvent, filePath: string) => {
-    processXmlForSmartBill(filePath, (err: any, message: any) => {
+const handleProcessXmlForSmartbill = (_event: IpcMainEvent, filePath: string, saveDirectory: string) => {
+    processXmlForSmartBill(filePath, saveDirectory, (err: any, message: any) => {
         if (err) {
             console.error('Error processing XML for Smartbill NIR:', err);
             _event.reply('smartbill-processing-error', err.message);
@@ -116,26 +116,40 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
     try {
         const result = await dialog.showOpenDialog({
             properties: ['openFile', 'multiSelections'],
-            filters: [{ name: 'XML or ZIP Files', extensions: ['xml', 'zip'] }]
+            filters: [{ name: 'XML or ZIP Files', extensions: ['xml', 'zip'] }],
         });
 
         if (!result.canceled && result.filePaths.length > 0) {
             const store = new electronStore();
-            const facturisType = store.get("facturisType", "facturis desktop");
+            const facturisType = store.get('facturisType', 'facturis desktop');
+
+            const saveDirResult = await dialog.showOpenDialog({
+                properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+                title: 'Select a folder to save your files',
+            });
+
+            if (saveDirResult.canceled || saveDirResult.filePaths.length === 0) {
+                console.log('No save directory selected');
+                _event.reply('file-processing-error', 'No save directory selected');
+                return;
+            }
+
+            const saveDirectory = saveDirResult.filePaths[0];
 
             for (const filePath of result.filePaths) {
                 const extension = path.extname(filePath).toLowerCase();
+
                 if (extension === '.zip') {
-                    console.log("Processing ZIP file:", filePath);
+                    console.log('Processing ZIP file:', filePath);
 
                     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'unzipped-'));
-                    console.log("Extracting ZIP to temporary directory:", tempDir);
+                    console.log('Extracting ZIP to temporary directory:', tempDir);
 
                     const zip = new AdmZip(filePath);
                     zip.extractAllTo(tempDir, true);
 
-                    const xmlFiles: any[] = [];
-                    const findXmlFiles = (dir: any) => {
+                    const xmlFiles: string[] = [];
+                    const findXmlFiles = (dir: string) => {
                         const files = fs.readdirSync(dir);
                         for (const file of files) {
                             const fullPath = path.join(dir, file);
@@ -149,15 +163,15 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
                     };
                     findXmlFiles(tempDir);
 
-                    console.log("Found XML files:", xmlFiles);
+                    console.log('Found XML files:', xmlFiles);
 
                     for (const xmlFilePath of xmlFiles) {
-                        await processFile(xmlFilePath, facturisType, _event);
+                        await processFile(xmlFilePath, facturisType, _event, saveDirectory);
                     }
 
                     fs.rmSync(tempDir, { recursive: true, force: true });
                 } else if (extension === '.xml') {
-                    await processFile(filePath, facturisType, _event);
+                    await processFile(filePath, facturisType, _event, saveDirectory);
                 } else {
                     console.log('Unsupported file type:', extension);
                     _event.reply('file-processing-error', 'Unsupported file type');
@@ -170,10 +184,10 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
     }
 };
 
-async function processFile(filePath: any, facturisType: any, _event: any) {
+async function processFile(filePath: any, facturisType: any, _event: any, saveDirectory: string) {
     switch (facturisType) {
         case "facturis online":
-            await processForFacturisOnline(filePath, (err: any, message: any) => {
+            await processForFacturisOnline(filePath, saveDirectory, (err: any, message: any) => {
                 if (err) {
                     console.error('Error processing file:', err);
                     _event.reply('file-processing-error', err.message);
@@ -184,7 +198,7 @@ async function processFile(filePath: any, facturisType: any, _event: any) {
             });
             break;
         case "facturis desktop":
-            await processForFacturisDesktop(filePath, (err: any, message: any) => {
+            await processForFacturisDesktop(filePath, saveDirectory, (err: any, message: any) => {
                 if (err) {
                     console.error('Error processing file:', err);
                     _event.reply('file-processing-error', err.message);
@@ -197,7 +211,7 @@ async function processFile(filePath: any, facturisType: any, _event: any) {
         case "freya":
             try {
                 console.log("Processing file for Freya NIR:", filePath);
-                await processXmlForFreyaNir(filePath, (err, message) => {
+                await processXmlForFreyaNir(filePath, saveDirectory, (err, message) => {
                     if (err) {
                         console.error('Error processing XML for Freya NIR:', err);
                         _event.reply('freya-processing-error', err.message);
@@ -214,7 +228,7 @@ async function processFile(filePath: any, facturisType: any, _event: any) {
         case "oblio":
             try {
                 console.log("Processing file for Oblio NIR:", filePath);
-                await processXmlForOblio(filePath, (err, message) => {
+                await processXmlForOblio(filePath, saveDirectory, (err, message) => {
                     if (err) {
                         console.error('Error processing XML for Oblio NIR:', err);
                         _event.reply('oblio-processing-error', err.message);
@@ -231,7 +245,7 @@ async function processFile(filePath: any, facturisType: any, _event: any) {
         case "smartbill":
             try {
                 console.log("Processing file for Smartbill NIR:", filePath);
-                await processXmlForSmartBill(filePath, (err: any, message: any) => {
+                await processXmlForSmartBill(filePath, saveDirectory, (err: any, message: any) => {
                     if (err) {
                         console.error('Error processing XML for Smartbill NIR:', err);
                         _event.reply('smartbill-processing-error', err.message);

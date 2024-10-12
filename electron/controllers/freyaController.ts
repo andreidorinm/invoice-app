@@ -1,10 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import { dialog } from 'electron';
 import ExcelJS from 'exceljs';
 import { mapXmlToNirFreyaXml } from '../mappers/freyaMappers';
 
-async function processXmlForFreyaNir(filePath: string, callback: (error: Error | null, message?: string) => void) {
+async function processXmlForFreyaNir(
+  filePath: string,
+  saveDirectory: string,
+  callback: (error: Error | null, message?: string) => void
+) {
   try {
     console.log("Reading XML file:", filePath);
     const xmlData = fs.readFileSync(filePath, 'utf8');
@@ -15,19 +18,9 @@ async function processXmlForFreyaNir(filePath: string, callback: (error: Error |
     const invoiceDate = new Date(dataForXLS.NIR.DocumentDate).toISOString().split('T')[0];
     const supplierName = dataForXLS.NIR.Supplier.replace(/\s+/g, '_');
 
-    console.log("Prompting user to select a directory for saving the NIR file...");
-    const { filePaths } = await dialog.showOpenDialog({
-      properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
-      title: 'Select a folder to save your NIR files',
-    });
-
-    if (!filePaths || filePaths.length === 0) {
-      throw new Error('No directory selected');
-    }
-
     const formattedFileName = `FREYA_NIR_${invoiceDate}_${supplierName}.xlsx`;
-    const outputDir = path.join(filePaths[0], formattedFileName);
-    console.log("Saving file at:", outputDir);
+    const outputPath = path.join(saveDirectory, formattedFileName);
+    console.log("Saving file at:", outputPath);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('NIR');
@@ -49,7 +42,7 @@ async function processXmlForFreyaNir(filePath: string, callback: (error: Error |
       'UnitPriceWithoutVat',
       'Discount',
       'VatRate',
-      'MeasureUnit'
+      'MeasureUnit',
     ]);
 
     dataForXLS.NIR.Products.forEach((product: any) => {
@@ -60,15 +53,15 @@ async function processXmlForFreyaNir(filePath: string, callback: (error: Error |
         product.UnitPriceWithoutVat,
         product.Discount,
         product.VatRate,
-        product.MeasureUnit
+        product.MeasureUnit,
       ]);
     });
 
     console.log("Writing the NIR data to an Excel file...");
-    await workbook.xlsx.writeFile(outputDir);
+    await workbook.xlsx.writeFile(outputPath);
 
-    console.log("NIR XLS saved successfully at", outputDir);
-    callback(null, `File saved successfully at: ${outputDir}`);
+    console.log("NIR XLS saved successfully at", outputPath);
+    callback(null, `File saved successfully at: ${outputPath}`);
   } catch (error: any) {
     console.error('Error processing XML for Freya NIR:', error);
     callback(error);

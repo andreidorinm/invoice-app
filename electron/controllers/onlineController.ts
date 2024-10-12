@@ -2,13 +2,13 @@ import parseXml from '../services/xmlParser';
 import writeCsvData from '../utils/csvWriter';
 import formatDate from '../utils/formatDate';
 import store from '../config/electronStore';
-import { dialog } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { mapXmlDataToFacturisOnlineNirCsv, mapXmlDataToFacturisOnlineNomenclatorCsv } from '../mappers/onlineMappers';
 
-async function processForFacturisOnline(filePath: any, callback: any) {
+async function processForFacturisOnline(filePath: any, saveDirectory: string, callback: any) {
   try {
+    const baseOutputDir = saveDirectory;
     const markupPercentage = store.get('markupPercentage', 0);
     const markupPercentageNumber = Number(markupPercentage);
 
@@ -34,17 +34,7 @@ async function processForFacturisOnline(filePath: any, callback: any) {
       let supplierName = partyName['cbc:Name'];
 
       const folderName = `Factura_Facturis_Online_${supplierName}_${issueDate}`;
-
-      const { filePaths } = await dialog.showOpenDialog({
-        properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
-        title: 'Select a folder to save your files',
-      });
-
-      if (!filePaths || filePaths.length === 0) {
-        throw new Error('No directory selected');
-      }
-
-      const outputDir = path.join(filePaths[0], folderName);
+      const outputDir = path.join(baseOutputDir, folderName);
 
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
@@ -63,5 +53,6 @@ async function processForFacturisOnline(filePath: any, callback: any) {
     callback(error);
   }
 }
+
 
 export { processForFacturisOnline };
