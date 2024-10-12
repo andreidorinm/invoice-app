@@ -1,10 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { dialog } from 'electron';
 import ExcelJS from 'exceljs';
 import { mapXmlToSmartBillNir } from '../mappers/smartbillMappers';
 
-async function processXmlForSmartBill(filePath: any, callback: any) {
+async function processXmlForSmartBill(filePath: any, saveDirectory: string, callback: any) {
   try {
     console.log("Reading XML file:", filePath);
     const xmlData = fs.readFileSync(filePath, 'utf8');
@@ -12,17 +11,9 @@ async function processXmlForSmartBill(filePath: any, callback: any) {
     const dataMapped = await mapXmlToSmartBillNir(xmlData);
     const dataForXLS = dataMapped.SmartBill.Products;
 
-    const { filePaths } = await dialog.showOpenDialog({
-      properties: ['openDirectory'],
-      title: 'Select folder for saving NIR file',
-    });
-
-    if (!filePaths || filePaths.length === 0) {
-      throw new Error('No directory selected');
-    }
     const documentDate = new Date(dataMapped.documentDate).toISOString().split('T')[0];
     const supplierName = dataMapped.supplierName.replace(/[^a-zA-Z0-9]/g, '_');
-    const outputDir = path.join(filePaths[0], `Smartbill_NIR_${documentDate}_${supplierName}.xlsx`);
+    const outputDir = path.join(saveDirectory, `Smartbill_NIR_${documentDate}_${supplierName}.xlsx`);
     console.log("Saving file at:", outputDir);
 
     const workbook = new ExcelJS.Workbook();
@@ -35,7 +26,7 @@ async function processXmlForSmartBill(filePath: any, callback: any) {
       { header: 'Tip', key: 'Tip', width: 15 },
       { header: 'Cant.', key: 'Cant.', width: 10 },
       { header: 'Pret', key: 'Pret', width: 15 },
-      { header: 'Um', key: 'Um', width: 15 }
+      { header: 'Um', key: 'Um', width: 15 },
     ];
 
     dataForXLS.forEach((product: any) => {
@@ -46,7 +37,7 @@ async function processXmlForSmartBill(filePath: any, callback: any) {
         'Tip': product.Tip,
         'Cant.': product['Cant.'],
         'Pret': product.Pret,
-        'Um': product.Um
+        'Um': product.Um,
       });
     });
 

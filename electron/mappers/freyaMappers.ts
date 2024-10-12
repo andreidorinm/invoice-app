@@ -6,7 +6,9 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
   const options = {
     explicitArray: false,
     ignoreAttrs: false,
-    tagNameProcessors: [xml2js.processors.stripPrefix]
+    tagNameProcessors: [xml2js.processors.stripPrefix],
+    attrNameProcessors: [xml2js.processors.stripPrefix],
+    valueProcessors: [xml2js.processors.parseNumbers, xml2js.processors.parseBooleans],
   };
 
   const result = await parseStringPromise(xmlData, options);
@@ -16,24 +18,36 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
   const currentTime = moment().format('HH:mm');
   const formattedDocumentDate = `${documentDate} ${currentTime}`;
 
-  const products = (Array.isArray(invoice.InvoiceLine) ? invoice.InvoiceLine : [invoice.InvoiceLine]).map((line: any) => {
-    const priceAmount = parseFloat(line.Price.PriceAmount._);
-    const units = parseFloat(line.InvoicedQuantity._);
+  const invoiceLines = Array.isArray(invoice.InvoiceLine) ? invoice.InvoiceLine : [invoice.InvoiceLine];
+
+  const products = invoiceLines.map((line: any) => {
+    const priceAmount = parseFloat(line.Price.PriceAmount._ || line.Price.PriceAmount);
+    const units = parseFloat(line.InvoicedQuantity._ || line.InvoicedQuantity);
     const vatRate = parseFloat(line.Item.ClassifiedTaxCategory.Percent) / 100;
 
     let measureUnit = line.InvoicedQuantity.$.unitCode;
-    measureUnit = measureUnit === 'H87' ? 'buc' : (measureUnit === 'KGM' ? 'kilogram' : measureUnit);
-    
+    measureUnit = measureUnit === 'H87' ? 'buc' : measureUnit === 'KGM' ? 'kilogram' : measureUnit;
+
+    const productCode =
+      line.Item.StandardItemIdentification?.ID?._ ||
+      line.Item.StandardItemIdentification?.ID ||
+      '';
+
     return {
       ProductName: line.Item.Name,
-      ProductCode: '',
+      ProductCode: productCode,
       Units: units,
       UnitPriceWithoutVat: priceAmount.toFixed(2),
       Discount: '0',
       VatRate: vatRate,
-      MeasureUnit: measureUnit
+      MeasureUnit: measureUnit,
     };
   });
+
+  const supplierName =
+    invoice?.AccountingSupplierParty?.Party?.PartyName?.Name ||
+    invoice?.AccountingSupplierParty?.Party?.PartyLegalEntity?.RegistrationName ||
+    'Unknown Supplier';
 
   return {
     NIR: {
@@ -41,9 +55,9 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
       DocumentNo: invoice.ID,
       DocumentDate: formattedDocumentDate,
       DeadlineDate: formattedDocumentDate,
-      Supplier: invoice.AccountingSupplierParty.Party.PartyName.Name,
-      FinancialAdministration: "Gestiune materii prime",
-      Products: products
-    }
+      Supplier: supplierName,
+      FinancialAdministration: 'Gestiune materii prime',
+      Products: products,
+    },
   };
 }

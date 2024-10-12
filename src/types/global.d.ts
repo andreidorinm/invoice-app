@@ -19,6 +19,7 @@ declare global {
       getFacturisType: () => Promise<string>;
       getDeviceId: () => Promise<string>;
       processXmlForFreya: (filePath: string) => void;
+      runExe: () => Promise<void>;
     };
   }
 }

@@ -1,10 +1,10 @@
 import './App.css'
-import FileProcessor from './components/FileProcessor'
+import FileProcessorScreen from './screens/FileProcessorScreen'
 
 function App() {
   return (
       <div className="relative flex flex-col justify-center overflow-hidden">
-        <FileProcessor />
+        <FileProcessorScreen />
       </div>
   )
 }

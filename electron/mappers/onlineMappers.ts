@@ -23,20 +23,25 @@ export async function mapXmlDataToFacturisOnlineNirCsv(jsonData: JsonData, marku
 
     const isVatPayer = store.get('isVatPayer', false);
 
+    const productCode =
+      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID']?.['_'] ||
+      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID'] ||
+      '';
+
     let sellingPriceWithoutVat, sellingPriceWithVat, outputVatRate;
     if (!isVatPayer) {
       sellingPriceWithVat = priceWithVat * (1 + markupPercentage / 100);
-      sellingPriceWithoutVat = sellingPriceWithVat; // Same as sellingPriceWithVat for non-VAT payers
-      outputVatRate = 'Neplatitor de TVA'; // Displaying non-VAT payer status
+      sellingPriceWithoutVat = sellingPriceWithVat;
+      outputVatRate = 'Neplatitor de TVA';
     } else {
       sellingPriceWithoutVat = priceWithoutVat * (1 + markupPercentage / 100);
       sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
-      outputVatRate = (vatRate * 100).toFixed(0) + '%'; // Calculating VAT rate for VAT payers
+      outputVatRate = (vatRate * 100).toFixed(0) + '%';
     }
 
     let row: CsvRow = {
       'Nr. Crt.': index + 1,
-      'Cod Produs': '',
+      'Cod Produs': productCode,
       'Denumire Produs': productName,
       'UM': 'BUC',
       'Cant.': quantity,
@@ -45,7 +50,7 @@ export async function mapXmlDataToFacturisOnlineNirCsv(jsonData: JsonData, marku
       'TVA Achizitie': (vatRate * 100).toFixed(0) + '%',
       'Pret fara TVA. Vanzare': sellingPriceWithoutVat.toFixed(2),
       'Pret cu TVA. Vanzare': sellingPriceWithVat.toFixed(2),
-      'TVA Vanzare': outputVatRate, // Adjusted VAT output rate display
+      'TVA Vanzare': outputVatRate,
       'Moneda Achizitie': 'RON',
       'Moneda Vanzare': 'RON',
       'Lot Produs': '',
@@ -74,16 +79,21 @@ export async function mapXmlDataToFacturisOnlineNomenclatorCsv(jsonData: JsonDat
     const priceWithoutVat = basePrice;
     const priceWithVat = basePrice * (1 + vatRate);
 
+    const productCode =
+      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID']?.['_'] ||
+      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID'] ||
+      '';
+
     let sellingPriceWithoutVat, sellingPriceWithVat, outputVatRate;
 
     if (!isVatPayer) {
       sellingPriceWithVat = priceWithVat * markupMultiplier;
-      sellingPriceWithoutVat = sellingPriceWithVat; // For non-VAT payers, might typically be unused or set to base price
-      outputVatRate = 'Neplatitor de TVA'; // Displaying non-VAT payer status
+      sellingPriceWithoutVat = sellingPriceWithVat;
+      outputVatRate = 'Neplatitor de TVA';
     } else {
       sellingPriceWithoutVat = priceWithoutVat * markupMultiplier;
       sellingPriceWithVat = sellingPriceWithoutVat * (1 + vatRate);
-      outputVatRate = (vatRate * 100).toFixed(0) + '%'; // Calculating VAT rate for VAT payers
+      outputVatRate = (vatRate * 100).toFixed(0) + '%';
     }
 
     let row: CsvRow = {
@@ -93,8 +103,8 @@ export async function mapXmlDataToFacturisOnlineNomenclatorCsv(jsonData: JsonDat
       'Pret fara TVA': sellingPriceWithoutVat.toFixed(2),
       'Pret cu TVA': sellingPriceWithVat.toFixed(2),
       'Moneda': line['cac:Price']['cbc:PriceAmount']['currencyID'] || 'RON',
-      'Cota TVA': outputVatRate, // Adjusted VAT output rate display
-      'Cod EAN': '',
+      'Cota TVA': outputVatRate,
+      'Cod EAN': productCode,
       'Cod SKU': '',
       'Alt Cod': '',
       'Categorie Produs': '',

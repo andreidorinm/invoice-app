@@ -2,23 +2,13 @@ import parseXml from '../services/xmlParser';
 import writeCsvData from '../utils/csvWriter';
 import formatDate from '../utils/formatDate';
 import store from '../config/electronStore';
-import { dialog } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { mapXmlDataToFacturisDesktopNirCsv, mapXmlDataToFacturisDesktopNomenclatorCsv } from '../mappers/desktopMappers.ts';
+import { mapXmlDataToFacturisDesktopNirCsv, mapXmlDataToFacturisDesktopNomenclatorCsv } from '../mappers/desktopMappers';
 
-async function processForFacturisDesktop(filePath: any, callback: any) {
+async function processForFacturisDesktop(filePath: any, saveDirectory: string, callback: any) {
   try {
-    const { filePaths } = await dialog.showOpenDialog({
-      properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
-      title: 'Select a folder to save your files',
-    });
-
-    if (!filePaths || filePaths.length === 0) {
-      throw new Error('No directory selected');
-    }
-
-    const baseOutputDir = filePaths[0];
+    const baseOutputDir = saveDirectory;
     const markupPercentage = store.get('markupPercentage', 0);
     const markupPercentageNumber = Number(markupPercentage);
 

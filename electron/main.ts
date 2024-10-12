@@ -62,7 +62,7 @@ function createWindow() {
     win.loadFile(path.join(process.env.DIST, 'index.html'));
   }
 
-win.maximize();
+  win.maximize();
 
 }
 

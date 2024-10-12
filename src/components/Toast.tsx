@@ -14,7 +14,7 @@ const Toast = ({ message, isVisible, onClose }: any) => {
 
   return (
     <div
-      className={`fixed right-5 top-5 md:right-10 md:top-10 p-3 bg-green-500 text-white rounded-lg shadow-lg transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'
+      className={`fixed left-5 bottom-5 md:left-10 md:bottom-10 p-3 bg-green-500 text-white rounded-lg shadow-lg transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'
         }`}
       role="alert"
     >
