@@ -1,17 +1,20 @@
 import moment from 'moment';
-import xml2js from 'xml2js';
-import { parseStringPromise } from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 
-export async function mapXmlToNirFreyaXml(xmlData: any) {
-  const options = {
-    explicitArray: false,
-    ignoreAttrs: false,
-    tagNameProcessors: [],
-    attrNameProcessors: [],
-    valueProcessors: [xml2js.processors.parseNumbers, xml2js.processors.parseBooleans],
+export async function mapXmlToNirFreyaXml(xmlData: string) {
+  const parserOptions = {
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    allowBooleanAttributes: true,
+    parseNodeValue: true,
+    parseAttributeValue: true,
+    trimValues: true,
+    removeNSPrefix: true,
   };
 
-  const result = await parseStringPromise(xmlData, options);
+  const parser = new XMLParser(parserOptions);
+  const result = parser.parse(xmlData);
+
   const invoice = result.Invoice;
 
   const documentDate = invoice.IssueDate ? moment(invoice.IssueDate).format('M/D/YYYY') : 'N/A';
@@ -21,38 +24,40 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
   const invoiceLines = Array.isArray(invoice.InvoiceLine) ? invoice.InvoiceLine : [invoice.InvoiceLine];
 
   const products = invoiceLines.map((line: any) => {
-    const priceAmount = parseFloat(line.Price.PriceAmount._ || line.Price.PriceAmount);
-    const units = parseFloat(line.InvoicedQuantity._ || line.InvoicedQuantity);
-    const vatRate = parseFloat(line.Item.ClassifiedTaxCategory.Percent) / 100;
+    const priceAmount = parseFloat(line.Price?.PriceAmount?.['#text'] || line.Price?.PriceAmount || 0);
+    const units = parseFloat(line.InvoicedQuantity?.['#text'] || line.InvoicedQuantity || 0);
+    const vatRate = parseFloat(line.Item?.ClassifiedTaxCategory?.Percent || 0) / 100;
 
-    let measureUnit = line.InvoicedQuantity.$.unitCode;
+    let measureUnit = line.InvoicedQuantity?.['@_unitCode'] || 'buc';
     measureUnit = measureUnit === 'H87' ? 'buc' : measureUnit === 'KGM' ? 'kilogram' : measureUnit;
 
     const productCode =
-      line.Item.StandardItemIdentification?.ID?._ ||
-      line.Item.StandardItemIdentification?.ID ||
-      '';
+      line.Item?.StandardItemIdentification?.ID?.['#text'] ||
+      line.Item?.StandardItemIdentification?.ID ||
+      'N/A';
 
     return {
-      ProductName: line.Item.Name,
-      ProductCode: productCode,
-      Units: units,
+      ProductName: line.Item?.Name || 'Unknown Product',
+      ProductCode: productCode || 'N/A',
+      Units: units.toFixed(2),
       UnitPriceWithoutVat: priceAmount.toFixed(2),
       Discount: '0',
-      VatRate: vatRate,
+      VatRate: vatRate.toFixed(2),
       MeasureUnit: measureUnit,
     };
   });
 
+  // Extract supplier name
   const supplierName =
     invoice?.AccountingSupplierParty?.Party?.PartyName?.Name ||
     invoice?.AccountingSupplierParty?.Party?.PartyLegalEntity?.RegistrationName ||
     'Unknown Supplier';
 
+  // Return the final NIR object
   return {
     NIR: {
-      DocumentSeries: invoice.ID,
-      DocumentNo: invoice.ID,
+      DocumentSeries: invoice?.ID || 'N/A',
+      DocumentNo: invoice?.ID || 'N/A',
       DocumentDate: formattedDocumentDate,
       DeadlineDate: formattedDocumentDate,
       Supplier: supplierName,
