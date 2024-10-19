@@ -1,62 +1,81 @@
-import { parseStringPromise } from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 
-export async function mapXmlToSmartBillNir(xmlData: any) {
+export async function mapXmlToSmartBillNir(xmlData: string) {
   try {
-    const result = await parseStringPromise(xmlData);
+    const parserOptions = {
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+      allowBooleanAttributes: true,
+      parseNodeValue: true,
+      parseAttributeValue: true,
+      trimValues: true,
+      removeNSPrefix: true,
+    };
+
+    const parser = new XMLParser(parserOptions);
+    const result = parser.parse(xmlData);
+
     const invoice = result.Invoice;
 
-    if (!invoice || !invoice['cac:InvoiceLine']) {
+    if (!invoice || !invoice.InvoiceLine) {
       throw new Error("Invalid XML structure: Invoice details are missing.");
     }
 
-    const documentDate = invoice['cbc:IssueDate'][0];
-    const supplierName =
-      invoice['cac:AccountingSupplierParty'][0]['cac:Party'][0]['cac:PartyName'][0]['cbc:Name'][0];
+    const documentDate = invoice.IssueDate;
+    const supplierParty = invoice.AccountingSupplierParty;
+    const party = supplierParty.Party;
+
+    if (!party) {
+      throw new Error('Unable to find Party information in the XML');
+    }
+
+    const supplierName = party.PartyName?.Name || party.PartyLegalEntity?.RegistrationName;
+
+    if (!supplierName) {
+      throw new Error('Unable to find supplier name in the XML');
+    }
+
+    const invoiceLines = invoice.InvoiceLine;
+    const lines = Array.isArray(invoiceLines) ? invoiceLines : [invoiceLines];
+
+    const Products = lines.map((line: any) => {
+      const priceObj = line.Price;
+      const priceAmountObj = priceObj?.PriceAmount;
+      const basePrice = priceAmountObj ? parseFloat(priceAmountObj) : 0;
+
+      const itemObj = line.Item;
+      const itemName = itemObj?.Name || 'Unknown Product';
+
+      let measureUnit = line.InvoicedQuantity?.['@_unitCode'];
+      measureUnit = measureUnit === 'H87' ? 'BUC' : measureUnit === 'KGM' ? 'Kg' : measureUnit || 'BUC';
+
+      const taxExemptionReason = 'Standard';
+
+      const standardItemIdentification = itemObj?.StandardItemIdentification;
+      const productCode = standardItemIdentification?.ID || '';
+
+      const quantity = line.InvoicedQuantity ? parseFloat(line.InvoicedQuantity) : 0;
+
+      return {
+        'Cod': productCode,
+        'Articol': itemName,
+        'Categorie': taxExemptionReason,
+        'Tip': 'produs',
+        'Cant.': quantity.toString(),
+        'Pret': basePrice.toFixed(2),
+        'Um': measureUnit,
+      };
+    });
 
     return {
       documentDate,
       supplierName,
       SmartBill: {
-        Products: invoice['cac:InvoiceLine']
-          .map((line: any) => {
-            const basePrice =
-              line['cac:Price'] && line['cac:Price'][0]['cbc:PriceAmount']
-                ? parseFloat(line['cac:Price'][0]['cbc:PriceAmount'][0]['_'])
-                : 0;
-            const priceWithoutVat = basePrice;
-
-            let measureUnit = line['cbc:InvoicedQuantity'][0]['$']['unitCode'];
-            measureUnit =
-              measureUnit === 'H87' ? 'BUC' : measureUnit === 'KGM' ? 'Kg' : measureUnit;
-
-            const taxExemptionReason = 'Standard';
-
-            const productCode =
-              line['cac:Item'] &&
-              line['cac:Item'][0]['cac:StandardItemIdentification'] &&
-              line['cac:Item'][0]['cac:StandardItemIdentification'][0]['cbc:ID'][0]['_']
-                ? line['cac:Item'][0]['cac:StandardItemIdentification'][0]['cbc:ID'][0]['_']
-                : line['cac:Item'][0]['cac:StandardItemIdentification'][0]['cbc:ID'][0];
-
-            return {
-              'Cod': productCode,
-              'Articol': line['cac:Item']
-                ? line['cac:Item'][0]['cbc:Name'][0]
-                : 'Unknown Product',
-              'Categorie': taxExemptionReason,
-              'Tip': 'produs',
-              'Cant.': line['cbc:InvoicedQuantity']
-                ? line['cbc:InvoicedQuantity'][0]['_']
-                : 0,
-              'Pret': priceWithoutVat.toFixed(2),
-              'Um': measureUnit,
-            };
-          })
-          .filter((product: any) => product !== null),
+        Products,
       },
     };
   } catch (error) {
-    console.error("Error processing XML for Smart Bill NIR:", error);
+    console.error('Error processing XML for Smart Bill NIR:', error);
     throw error;
   }
 }

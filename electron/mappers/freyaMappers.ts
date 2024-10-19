@@ -6,8 +6,8 @@ export async function mapXmlToNirFreyaXml(xmlData: any) {
   const options = {
     explicitArray: false,
     ignoreAttrs: false,
-    tagNameProcessors: [xml2js.processors.stripPrefix],
-    attrNameProcessors: [xml2js.processors.stripPrefix],
+    tagNameProcessors: [],
+    attrNameProcessors: [],
     valueProcessors: [xml2js.processors.parseNumbers, xml2js.processors.parseBooleans],
   };
 

@@ -6,7 +6,7 @@ import { processForFacturisDesktop } from "../controllers/desktopController";
 import { processXmlForFreyaNir } from "../controllers/freyaController";
 import { processXmlForOblio } from "../controllers/oblioController";
 import { processXmlForSmartBill } from "../controllers/smartbillController";
-import fs from 'fs';
+import { promises as fsPromises } from 'fs'; // Add this line
 import path from 'path';
 import os from 'os';
 import AdmZip from 'adm-zip';
@@ -142,34 +142,46 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
                 if (extension === '.zip') {
                     console.log('Processing ZIP file:', filePath);
 
-                    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'unzipped-'));
+                    const tempDir = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'unzipped-'));
                     console.log('Extracting ZIP to temporary directory:', tempDir);
 
                     const zip = new AdmZip(filePath);
                     zip.extractAllTo(tempDir, true);
 
                     const xmlFiles: string[] = [];
-                    const findXmlFiles = (dir: string) => {
-                        const files = fs.readdirSync(dir);
+                    const findXmlFiles = async (dir: string) => {
+                        const files = await fsPromises.readdir(dir);
                         for (const file of files) {
                             const fullPath = path.join(dir, file);
-                            const stat = fs.statSync(fullPath);
+                            const stat = await fsPromises.stat(fullPath);
                             if (stat.isDirectory()) {
-                                findXmlFiles(fullPath);
-                            } else if (path.extname(fullPath).toLowerCase() === '.xml') {
+                                await findXmlFiles(fullPath);
+                            } else if (path.extname(fullPath).toLowerCase() === '.xml' && !file.startsWith('semnatura_')) {
                                 xmlFiles.push(fullPath);
                             }
                         }
                     };
-                    findXmlFiles(tempDir);
+
+                    await findXmlFiles(tempDir);
 
                     console.log('Found XML files:', xmlFiles);
 
-                    for (const xmlFilePath of xmlFiles) {
-                        await processFile(xmlFilePath, facturisType, _event, saveDirectory);
-                    }
+                    try {
+                        for (const xmlFilePath of xmlFiles) {
+                            await processFile(xmlFilePath, facturisType, _event, saveDirectory);
+                        }
+                    } finally {
+                        const deleteTempDir = async (dirPath: string) => {
+                            try {
+                                await fsPromises.rm(dirPath, { recursive: true, force: true });
+                                console.log('Temporary directory deleted successfully.');
+                            } catch (err: any) {
+                                console.error(`Failed to delete temporary directory: ${err.message}`);
+                            }
+                        };
 
-                    fs.rmSync(tempDir, { recursive: true, force: true });
+                        await deleteTempDir(tempDir);
+                    }
                 } else if (extension === '.xml') {
                     await processFile(filePath, facturisType, _event, saveDirectory);
                 } else {
@@ -183,6 +195,7 @@ const handleOpenFileDialog = async (_event: IpcMainEvent) => {
         _event.reply('file-processing-error', err.message);
     }
 };
+
 
 async function processFile(filePath: any, facturisType: any, _event: any, saveDirectory: string) {
     switch (facturisType) {

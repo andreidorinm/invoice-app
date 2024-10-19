@@ -1,12 +1,12 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import ExcelJS from 'exceljs';
 import { mapXmlToSmartBillNir } from '../mappers/smartbillMappers';
 
-async function processXmlForSmartBill(filePath: any, saveDirectory: string, callback: any) {
+async function processXmlForSmartBill(filePath: string, saveDirectory: string, callback: any) {
   try {
-    console.log("Reading XML file:", filePath);
-    const xmlData = fs.readFileSync(filePath, 'utf8');
+    console.log('Reading XML file:', filePath);
+    const xmlData = await fs.readFile(filePath, 'utf8');
 
     const dataMapped = await mapXmlToSmartBillNir(xmlData);
     const dataForXLS = dataMapped.SmartBill.Products;
@@ -14,7 +14,7 @@ async function processXmlForSmartBill(filePath: any, saveDirectory: string, call
     const documentDate = new Date(dataMapped.documentDate).toISOString().split('T')[0];
     const supplierName = dataMapped.supplierName.replace(/[^a-zA-Z0-9]/g, '_');
     const outputDir = path.join(saveDirectory, `Smartbill_NIR_${documentDate}_${supplierName}.xlsx`);
-    console.log("Saving file at:", outputDir);
+    console.log('Saving file at:', outputDir);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('NIR');

@@ -1,8 +1,11 @@
 import { CsvRow, JsonData } from '../../src/types/fileProcessor';
 import store from '../config/electronStore';
 
-export async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonData, markupPercentage: number): Promise<CsvRow[]> {
-  const invoiceLines = jsonData.Invoice['cac:InvoiceLine'];
+export async function mapXmlDataToFacturisDesktopNomenclatorCsv(
+  jsonData: JsonData,
+  markupPercentage: number
+): Promise<CsvRow[]> {
+  const invoiceLines = jsonData.Invoice.InvoiceLine;
   const csvRows: CsvRow[] = [];
   const isVatPayer = store.get('isVatPayer', false);
   const markupMultiplier = 1 + markupPercentage / 100;
@@ -10,10 +13,17 @@ export async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonDa
   const lines = Array.isArray(invoiceLines) ? invoiceLines : [invoiceLines];
 
   lines.forEach((line, index) => {
-    const basePrice = parseFloat(line['cac:Price']['cbc:PriceAmount']['_']);
-    const vatRate = line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']
-      ? parseFloat(line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']) / 100
+    const priceObj = line.Price;
+    const itemObj = line.Item;
+    const priceAmountObj = priceObj?.PriceAmount;
+    const itemName = itemObj?.Name;
+    const classifiedTaxCategory = itemObj?.ClassifiedTaxCategory;
+    const taxPercent = classifiedTaxCategory?.Percent
+      ? parseFloat(classifiedTaxCategory.Percent) / 100
       : 0;
+
+    const basePrice = priceAmountObj ? parseFloat(priceAmountObj) : 0;
+    const vatRate = taxPercent;
 
     let priceWithoutVat = basePrice;
     let priceWithVat = basePrice * (1 + vatRate);
@@ -27,20 +37,19 @@ export async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonDa
       sellingPriceWithoutVat = sellingPriceWithVat;
     }
 
+    const standardItemIdentification = itemObj?.StandardItemIdentification;
     const productCode =
-      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID']?.['_'] ||
-      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID'] ||
-      '';
+      standardItemIdentification?.ID || '';
 
     let outputVatRate = isVatPayer ? (vatRate * 100).toFixed(0) + '%' : 'Neplatitor de TVA';
 
     let row: CsvRow = {
       'Nr. crt.': index + 1,
-      'Nume Produs': line['cac:Item']['cbc:Name'],
+      'Nume Produs': itemName || 'Unknown Product',
       'UM': 'BUC',
       'Pret fara TVA': sellingPriceWithoutVat.toFixed(2),
       'Pret cu TVA': sellingPriceWithVat.toFixed(2),
-      'Moneda': line['cac:Price']['cbc:PriceAmount']['currencyID'] || 'RON',
+      'Moneda': priceAmountObj?.['@_currencyID'] || 'RON',
       'Cod EAN': '',
       'Cod Produs': productCode,
       'Observatii 1': '',
@@ -63,17 +72,27 @@ export async function mapXmlDataToFacturisDesktopNomenclatorCsv(jsonData: JsonDa
   return csvRows;
 }
 
-export async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, markupPercentage: number): Promise<CsvRow[]> {
-  const invoiceLines = jsonData.Invoice['cac:InvoiceLine'];
+export async function mapXmlDataToFacturisDesktopNirCsv(
+  jsonData: JsonData,
+  markupPercentage: number
+): Promise<CsvRow[]> {
+  const invoiceLines = jsonData.Invoice.InvoiceLine;
   const csvRows: CsvRow[] = [];
 
   const lines = Array.isArray(invoiceLines) ? invoiceLines : [invoiceLines];
 
   lines.forEach((line, index) => {
-    let basePrice = parseFloat(line['cac:Price']['cbc:PriceAmount']['_']);
-    let vatRate = line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']
-      ? parseFloat(line['cac:Item']['cac:ClassifiedTaxCategory']['cbc:Percent']) / 100
+    const priceObj = line.Price;
+    const itemObj = line.Item;
+    const priceAmountObj = priceObj?.PriceAmount;
+    const itemName = itemObj?.Name;
+    const classifiedTaxCategory = itemObj?.ClassifiedTaxCategory;
+    const taxPercent = classifiedTaxCategory?.Percent
+      ? parseFloat(classifiedTaxCategory.Percent) / 100
       : 0;
+
+    let basePrice = priceAmountObj ? parseFloat(priceAmountObj) : 0;
+    let vatRate = taxPercent;
 
     let priceWithoutVat = basePrice;
     let priceWithVat = parseFloat((basePrice * (1 + vatRate)).toFixed(4));
@@ -81,7 +100,7 @@ export async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, mark
     const isVatPayer = store.get('isVatPayer', false);
     const markupMultiplier = 1 + markupPercentage / 100;
 
-    if (line['cac:Item']['cbc:Name'].includes("GARANTIE SGR")) {
+    if (itemName?.includes("GARANTIE SGR")) {
       priceWithoutVat = 0.50;
       priceWithVat = 0.50;
       vatRate = 0;
@@ -95,19 +114,18 @@ export async function mapXmlDataToFacturisDesktopNirCsv(jsonData: JsonData, mark
       sellingPriceWithoutVat = sellingPriceWithVat;
     }
 
+    const standardItemIdentification = itemObj?.StandardItemIdentification;
     const productCode =
-      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID']?.['_'] ||
-      line['cac:Item']['cac:StandardItemIdentification']?.['cbc:ID'] ||
-      '';
+      standardItemIdentification?.ID || '';
 
-    const productName = line['cac:Item']['cbc:Name'];
-    let quantity = parseFloat(line['cbc:InvoicedQuantity']['_']);
+    const invoicedQuantityObj = line.InvoicedQuantity;
+    let quantity = parseFloat(invoicedQuantityObj);
 
     let outputVatRate = isVatPayer ? (vatRate * 100).toFixed(0) + '%' : 'Neplatitor de TVA';
 
     let row: CsvRow = {
       'Nr. crt.': index + 1,
-      'Nume Produs': productName,
+      'Nume Produs': itemName || 'Unknown Product',
       'UM': 'BUC',
       'Cod Produs EAN': productCode,
       'Cantitate': quantity.toString(),

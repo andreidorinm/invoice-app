@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import { mapXmlToOblioXml } from '../mappers/oblioMappers';
 import ExcelJS from 'exceljs';
@@ -9,7 +9,7 @@ async function processXmlForOblio(
   callback: (error: Error | null, message?: string) => void
 ) {
   try {
-    const xmlData = fs.readFileSync(filePath, 'utf8');
+    const xmlData = await fs.readFile(filePath, 'utf8');
     const dataForXLS = await mapXmlToOblioXml(xmlData);
 
     const documentDate = new Date(dataForXLS.documentDate).toISOString().split('T')[0];

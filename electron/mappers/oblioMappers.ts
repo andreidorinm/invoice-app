@@ -1,60 +1,83 @@
-import { parseStringPromise } from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 import store from '../config/electronStore';
 
-export async function mapXmlToOblioXml(xmlData: any) {
+export async function mapXmlToOblioXml(xmlData: string) {
   try {
-    const result = await parseStringPromise(xmlData);
+    const parserOptions = {
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+      allowBooleanAttributes: true,
+      parseNodeValue: true,
+      parseAttributeValue: true,
+      trimValues: true,
+      removeNSPrefix: true,
+    };
+
+    const parser = new XMLParser(parserOptions);
+    const result = parser.parse(xmlData);
+
     const invoice = result.Invoice;
     const isVatPayer = store.get('isVatPayer', false);
 
-    if (!invoice || !invoice['cac:InvoiceLine']) {
+    if (!invoice || !invoice.InvoiceLine) {
       throw new Error("Invalid XML structure: Invoice details are missing.");
     }
 
-    const documentDate = invoice['cbc:IssueDate'][0];
-    const supplierName = invoice['cac:AccountingSupplierParty'][0]['cac:Party'][0]['cac:PartyName'][0]['cbc:Name'][0];
+    const documentDate = invoice.IssueDate;
+    const supplierParty = invoice.AccountingSupplierParty;
+    const party = supplierParty.Party;
+
+    if (!party) {
+      throw new Error('Unable to find Party information in the XML');
+    }
+
+    const supplierName = party.PartyName?.Name || party.PartyLegalEntity?.RegistrationName;
+
+    if (!supplierName) {
+      throw new Error('Unable to find supplier name in the XML');
+    }
+
+    // Prepare Products array
+    const invoiceLines = invoice.InvoiceLine;
+    const lines = Array.isArray(invoiceLines) ? invoiceLines : [invoiceLines];
+
+    const Products = lines.map((line: any) => {
+      const priceObj = line.Price;
+      const priceAmountObj = priceObj?.PriceAmount;
+      const basePrice = priceAmountObj ? parseFloat(priceAmountObj) : 0;
+
+      const itemObj = line.Item;
+      const itemName = itemObj?.Name || 'Unknown Product';
+      const classifiedTaxCategory = itemObj?.ClassifiedTaxCategory;
+      const vatRate = classifiedTaxCategory?.Percent
+        ? parseFloat(classifiedTaxCategory.Percent)
+        : 0;
+
+      let measureUnit = line.InvoicedQuantity?.['@_unitCode'];
+      measureUnit = measureUnit === 'H87' ? 'BUC' : measureUnit === 'KGM' ? 'Kg' : measureUnit || 'BUC';
+
+      const standardItemIdentification = itemObj?.StandardItemIdentification;
+      const productCode = standardItemIdentification?.ID || '';
+
+      const quantity = line.InvoicedQuantity ? parseFloat(line.InvoicedQuantity) : 0;
+
+      return {
+        'Denumire produs': itemName,
+        'Cod produs': productCode,
+        'U.M.': measureUnit,
+        'Cantitate': quantity.toString(),
+        'Pret achizitie': basePrice.toFixed(2),
+        'Cota TVA': vatRate.toFixed(0),
+        'TVA Inclus': isVatPayer ? 'DA' : 'NU',
+      };
+    });
 
     return {
       documentDate,
       supplierName,
       Oblio: {
-        Products: invoice['cac:InvoiceLine'].map((line: any) => {
-          const basePrice =
-            line['cac:Price'] && line['cac:Price'][0]['cbc:PriceAmount']
-              ? parseFloat(line['cac:Price'][0]['cbc:PriceAmount'][0]['_'])
-              : 0;
-          const vatRate =
-            line['cac:Item'] && line['cac:Item'][0]['cac:ClassifiedTaxCategory']
-              ? parseFloat(line['cac:Item'][0]['cac:ClassifiedTaxCategory'][0]['cbc:Percent'][0])
-              : 0;
-          const priceWithoutVat = basePrice;
-
-          let measureUnit = line['cbc:InvoicedQuantity'][0]['$']['unitCode'];
-          measureUnit =
-            measureUnit === 'H87' ? 'BUC' : measureUnit === 'KGM' ? 'Kg' : measureUnit;
-
-          const productCode =
-            line['cac:Item'] &&
-            line['cac:Item'][0]['cac:StandardItemIdentification'] &&
-            line['cac:Item'][0]['cac:StandardItemIdentification'][0]['cbc:ID'][0]['_']
-              ? line['cac:Item'][0]['cac:StandardItemIdentification'][0]['cbc:ID'][0]['_']
-              : line['cac:Item'][0]['cac:StandardItemIdentification'][0]['cbc:ID'][0];
-
-          return {
-            'Denumire produs': line['cac:Item']
-              ? line['cac:Item'][0]['cbc:Name'][0]
-              : 'Unknown Product',
-            'Cod produs': productCode,
-            'U.M.': measureUnit,
-            'Cantitate': line['cbc:InvoicedQuantity']
-              ? line['cbc:InvoicedQuantity'][0]['_']
-              : 0,
-            'Pret achizitie': priceWithoutVat.toFixed(2),
-            'Cota TVA': vatRate.toFixed(0),
-            'TVA inclus': isVatPayer ? 'DA' : 'NU'
-          };
-        })
-      }
+        Products,
+      },
     };
   } catch (error) {
     console.error("Error processing XML:", error);
