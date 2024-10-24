@@ -52,9 +52,9 @@ export async function mapXmlToSmartBillNir(xmlData: any) {
       const taxExemptionReason = 'Standard';
 
       const standardItemIdentification = itemObj?.StandardItemIdentification?.ID;
-      const productCode = standardItemIdentification?.['#text'] || 'N/A';
+      const productCode = standardItemIdentification?.['#text'] || '';
 
-      if (!productCode || productCode === 'N/A') {
+      if (!productCode || productCode === '') {
         console.error('Missing or malformed product code:', standardItemIdentification);
       } else {
         console.log('Confirmed product code:', standardItemIdentification);

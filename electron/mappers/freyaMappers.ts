@@ -17,7 +17,7 @@ export async function mapXmlToNirFreyaXml(xmlData: string) {
 
   const invoice = result.Invoice;
 
-  const documentDate = invoice.IssueDate ? moment(invoice.IssueDate).format('M/D/YYYY') : 'N/A';
+  const documentDate = invoice.IssueDate ? moment(invoice.IssueDate).format('M/D/YYYY') : '';
   const currentTime = moment().format('HH:mm');
   const formattedDocumentDate = `${documentDate} ${currentTime}`;
 
@@ -34,11 +34,11 @@ export async function mapXmlToNirFreyaXml(xmlData: string) {
     const productCode =
       line.Item?.StandardItemIdentification?.ID?.['#text'] ||
       line.Item?.StandardItemIdentification?.ID ||
-      'N/A';
+      '';
 
     return {
       ProductName: line.Item?.Name || 'Unknown Product',
-      ProductCode: productCode || 'N/A',
+      ProductCode: productCode || '',
       Units: units.toFixed(2),
       UnitPriceWithoutVat: priceAmount.toFixed(2),
       Discount: '0',
@@ -56,8 +56,8 @@ export async function mapXmlToNirFreyaXml(xmlData: string) {
   // Return the final NIR object
   return {
     NIR: {
-      DocumentSeries: invoice?.ID || 'N/A',
-      DocumentNo: invoice?.ID || 'N/A',
+      DocumentSeries: invoice?.ID || '',
+      DocumentNo: invoice?.ID || '',
       DocumentDate: formattedDocumentDate,
       DeadlineDate: formattedDocumentDate,
       Supplier: supplierName,

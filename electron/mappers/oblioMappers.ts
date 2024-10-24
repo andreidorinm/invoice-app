@@ -55,9 +55,9 @@ export async function mapXmlToOblioXml(xmlData: string) {
 
       const standardItemIdentification = itemObj?.StandardItemIdentification?.ID;
 
-      const productCode = standardItemIdentification?.['#text'] || standardItemIdentification || 'N/A';
+      const productCode = standardItemIdentification?.['#text'] || standardItemIdentification || '';
 
-      if (productCode === 'N/A') {
+      if (productCode === '') {
         console.error('Missing or malformed product code:', standardItemIdentification);
       }
 

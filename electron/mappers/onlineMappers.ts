@@ -38,7 +38,7 @@ export async function mapXmlDataToFacturisOnlineNirCsv(
     let quantity = line.InvoicedQuantity ? parseFloat(line.InvoicedQuantity?.['#text'] || line.InvoicedQuantity) : 0;
 
     const standardItemIdentification = itemObj?.StandardItemIdentification;
-    const productCode = standardItemIdentification?.ID?.['#text'] || standardItemIdentification?.ID || 'N/A';
+    const productCode = standardItemIdentification?.ID?.['#text'] || standardItemIdentification?.ID || '';
 
     if (itemName.toUpperCase().includes('GARANTIE SGR')) {
       if (priceWithoutVat === 0.50) {
@@ -107,7 +107,7 @@ export async function mapXmlDataToFacturisOnlineNomenclatorCsv(
     let quantity = line.InvoicedQuantity ? parseFloat(line.InvoicedQuantity?.['#text'] || line.InvoicedQuantity) : 0;
 
     const standardItemIdentification = itemObj?.StandardItemIdentification;
-    const productCode = standardItemIdentification?.ID?.['#text'] || standardItemIdentification?.ID || 'N/A';
+    const productCode = standardItemIdentification?.ID?.['#text'] || standardItemIdentification?.ID || '';
 
     if (itemName.toUpperCase().includes('GARANTIE SGR')) {
       if (priceWithoutVat === 0.50) {

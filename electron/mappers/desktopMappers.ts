@@ -63,7 +63,7 @@ export async function mapXmlDataToFacturisDesktopNirCsv(
       }
     }
 
-    const productCode = itemObj?.StandardItemIdentification?.ID?.['#text'] || 'N/A';
+    const productCode = itemObj?.StandardItemIdentification?.ID?.['#text'] || '';
 
     let row: CsvRow = {
       'Nr. crt.': index + 1,
@@ -128,7 +128,7 @@ export async function mapXmlDataToFacturisDesktopNomenclatorCsv(
       sellingPriceWithoutVat = sellingPriceWithVat;
     }
 
-    const productCode = itemObj?.StandardItemIdentification?.ID?.['#text'] || 'N/A';
+    const productCode = itemObj?.StandardItemIdentification?.ID?.['#text'] || '';
 
     let row: CsvRow = {
       'Nr. crt.': index + 1,

@@ -1,7 +1,7 @@
 {
   "name": "clarfactura-in-nir",
   "private": true,
-  "version": "1.0.6",
+  "version": "1.0.7",
   "scripts": {
     "dev": "vite && pnpm watch-tailwind",
     "watch-tailwind": "npx tailwindcss -i ./src/index.css -o ./dist/output.css --watch",
